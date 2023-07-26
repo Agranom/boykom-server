@@ -9,9 +9,9 @@ export class GroceryService {
   constructor(@InjectModel('grocery') private groceryModel: Model<Grocery>) {
   }
 
-  async create(groceryDto: CreateGroceryDto): Promise<Grocery> {
+  async create(groceryDto: CreateGroceryDto, userId: string): Promise<Grocery> {
     try {
-      const item = new this.groceryModel(groceryDto);
+      const item = new this.groceryModel({ ...groceryDto, userId });
       await item.save();
       return item.toJSON();
     } catch (e) {
@@ -19,9 +19,9 @@ export class GroceryService {
     }
   }
 
-  async findAll(): Promise<Grocery[]> {
+  async findAll(userId: string): Promise<Grocery[]> {
     try {
-      return this.groceryModel.find().sort({createdAt: 1}).exec();
+      return this.groceryModel.find({userId}).sort({createdAt: 1}).exec();
     } catch (e) {
       return e;
     }
