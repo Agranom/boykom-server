@@ -6,6 +6,8 @@ export type UserDocument = User & Document
 
 @Schema({ validateBeforeSave: true })
 export class User {
+  id: string;
+
   @Prop({ unique: true, required: true })
   username: string;
 
@@ -36,3 +38,11 @@ UserSchema.pre('save', async function(next) {
 UserSchema.methods.validatePassword= async function (password: string): Promise<boolean> {
   return bcrypt.compare(password, this.password);
 }
+
+UserSchema.set('toJSON', {
+  virtuals: true,
+  versionKey: false,
+  transform: (doc, ret) => {
+    delete ret._id;
+  }
+});
