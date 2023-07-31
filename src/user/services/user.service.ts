@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { CreateUserDto } from '../dto/create-user.dto';
-import { UserDocument } from '../models/user.schema';
+import { User, UserDocument } from '../models/user.schema';
 
 @Injectable()
 export class UserService {
@@ -19,6 +19,12 @@ export class UserService {
       throw new NotFoundException('User not found');
     }
     return user;
+  }
+
+  async getAll(excludeMe: boolean, userId: string): Promise<User[]> {
+    const query = excludeMe ? { _id: { $nin: [userId] } } : {};
+    const users: UserDocument[] = await this.userModel.find(query);
+    return users.map(u => u.toJSON());
   }
 
 }
