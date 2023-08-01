@@ -7,6 +7,7 @@ import { AuthModule } from './auth/auth.module';
 import { AuthGuard } from './auth/guards/auth.guard';
 import { GroceryModule } from './grocery/grocery.module';
 import { UserModule } from './user/user.module';
+import { FamilyGroupModule } from './family-group/family-group.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { UserModule } from './user/user.module';
     GroceryModule,
     AuthModule,
     UserModule,
+    FamilyGroupModule,
   ],
   controllers: [],
   providers: [
