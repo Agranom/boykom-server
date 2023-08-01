@@ -3,7 +3,7 @@ import { Document } from 'mongoose';
 
 export type FamilyGroupDocument = FamilyGroup & Document;
 
-@Schema({ versionKey: false })
+@Schema({ versionKey: false, virtuals: true })
 export class FamilyGroup {
   @Prop({ required: true, unique: true })
   ownerId: string;
@@ -13,3 +13,10 @@ export class FamilyGroup {
 }
 
 export const FamilyGroupSchema = SchemaFactory.createForClass(FamilyGroup);
+
+FamilyGroupSchema.set('toJSON', {
+  virtuals: true,
+  transform: (doc, ret) => {
+    delete ret._id;
+  },
+})

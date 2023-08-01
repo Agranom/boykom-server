@@ -1,6 +1,7 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Param, Post, Put, Req, Res } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Post, Put, Req, Res } from '@nestjs/common';
 import { Response } from 'express';
 import { IRequest } from '../../common/models/request.interface';
+import { ObjectIdPipe } from '../../common/pipes/object-id.pipe';
 import { CreateGroupDto } from '../dto/create-group.dto';
 import { UpdateGroupDto } from '../dto/update-group.dto';
 import { FamilyGroup } from '../models/family-group.schema';
@@ -28,5 +29,11 @@ export class FamilyGroupController {
   @HttpCode(HttpStatus.OK)
   async updateGroupByOwnerId(@Body() updateGroupDto: UpdateGroupDto, @Param('ownerId') ownerId: string): Promise<FamilyGroup> {
     return this.familyGroupService.updateGroupByOwnerId(ownerId, updateGroupDto);
+  }
+
+  @Delete(':id')
+  @HttpCode(HttpStatus.OK)
+  async deleteGroupById(@Param('id', ObjectIdPipe) id: string): Promise<{id: string}> {
+    return this.familyGroupService.deleteGroupById(id);
   }
 }

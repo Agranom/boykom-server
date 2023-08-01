@@ -10,6 +10,7 @@ import { FamilyGroupService } from './services/family-group.service';
   ],
   controllers: [FamilyGroupController],
   providers: [FamilyGroupService],
+  exports: [FamilyGroupService],
 })
 export class FamilyGroupModule {
 }

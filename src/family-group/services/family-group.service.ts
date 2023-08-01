@@ -26,4 +26,12 @@ export class FamilyGroupService {
     }
     return updatedGroup;
   }
+
+  async deleteGroupById(id: string): Promise<{ id: string }> {
+    const deletedGroup = await this.familyGroup.findByIdAndRemove(id);
+    if (!deletedGroup) {
+      throw new NotFoundException();
+    }
+    return { id };
+  }
 }
