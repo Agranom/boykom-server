@@ -1,24 +1,34 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
+import { staticText } from '../../common/const/static-text';
+import { INotificationPayload } from '../../common/models/notification-payload.interface';
 import { FamilyGroupService } from '../../family-group/services/family-group.service';
+import { SubscriptionService } from '../../notification/services/subscription.service';
 import { CreateGroceryDto } from '../dto/create-grocery.dto';
 import { Grocery } from '../schemas/grocery.schema';
 
 @Injectable()
 export class GroceryService {
   constructor(@InjectModel('grocery') private groceryModel: Model<Grocery>,
-              private familyGroupService: FamilyGroupService) {
+              private familyGroupService: FamilyGroupService,
+              private subscriptionService: SubscriptionService) {
   }
 
   async create(groceryDto: CreateGroceryDto, userId: string): Promise<Grocery> {
-    try {
-      const item = new this.groceryModel({ ...groceryDto, userId });
-      await item.save();
-      return item.toJSON();
-    } catch (e) {
-      return e;
+    const item = new this.groceryModel({ ...groceryDto, userId });
+    await item.save();
+    const familyGroup = await this.familyGroupService.getByUserId(userId);
+    if (familyGroup) {
+      const notifierIds = [familyGroup.ownerId, ...familyGroup.memberIds];
+      const paylod: INotificationPayload = {
+        title: staticText.grocery.newProductNotificationTitle,
+        body: item.name,
+      };
+      // Should be run in background, so that don't need to add `await`
+      this.subscriptionService.notifySubscribers(notifierIds, paylod);
     }
+    return item.toJSON();
   }
 
   async findAll(userId: string): Promise<Grocery[]> {
@@ -54,9 +64,4 @@ export class GroceryService {
       return e;
     }
   }
-
-  //
-  // async changeStatusById(id: string, status: eGroceryItemStatus): Promise<eGroceryItemStatus | NotFoundException> {
-  //
-  // }
 }

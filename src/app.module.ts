@@ -8,6 +8,7 @@ import { AuthGuard } from './auth/guards/auth.guard';
 import { GroceryModule } from './grocery/grocery.module';
 import { UserModule } from './user/user.module';
 import { FamilyGroupModule } from './family-group/family-group.module';
+import { SubscriptionModule } from './notification/subscription.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { FamilyGroupModule } from './family-group/family-group.module';
     AuthModule,
     UserModule,
     FamilyGroupModule,
+    SubscriptionModule,
   ],
   controllers: [],
   providers: [
