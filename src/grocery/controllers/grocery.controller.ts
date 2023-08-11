@@ -17,7 +17,7 @@ export class GroceryController {
 
   @Post()
   async create(@Body() createDto: CreateGroceryDto, @Req() req: IRequest) {
-    return this.groceryService.create(createDto, req.user.userId);
+    return this.groceryService.create(createDto, req.user.userId, req.user.username);
   }
 
   @Put(':id')

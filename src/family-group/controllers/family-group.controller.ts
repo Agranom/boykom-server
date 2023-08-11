@@ -1,5 +1,5 @@
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Post, Put, Req, Res } from '@nestjs/common';
-import { Response } from 'express';
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Post, Put, Req } from '@nestjs/common';
+import { IStatusResponse } from '../../common/models/status-response.interface';
 import { IRequest } from '../../common/models/request.interface';
 import { ObjectIdPipe } from '../../common/pipes/object-id.pipe';
 import { CreateGroupDto } from '../dto/create-group.dto';
@@ -13,10 +13,9 @@ export class FamilyGroupController {
   }
 
   @Post()
-  @HttpCode(HttpStatus.CREATED)
-  async createGroup(@Body() createGroupDto: CreateGroupDto, @Req() req: IRequest, @Res() res: Response): Promise<void> {
-    await this.familyGroupService.create(createGroupDto, req.user.userId);
-    res.json({});
+  @HttpCode(HttpStatus.OK)
+  async createGroup(@Body() createGroupDto: CreateGroupDto, @Req() req: IRequest): Promise<IStatusResponse> {
+    return this.familyGroupService.create(createGroupDto, req.user.userId);
   }
 
   @Get(':userId')
@@ -27,13 +26,13 @@ export class FamilyGroupController {
 
   @Put(':ownerId')
   @HttpCode(HttpStatus.OK)
-  async updateGroupByOwnerId(@Body() updateGroupDto: UpdateGroupDto, @Param('ownerId') ownerId: string): Promise<FamilyGroup> {
-    return this.familyGroupService.updateGroupByOwnerId(ownerId, updateGroupDto);
+  async addMembersToGroup(@Body() updateGroupDto: UpdateGroupDto, @Param('ownerId') ownerId: string): Promise<FamilyGroup | IStatusResponse> {
+    return this.familyGroupService.addMembers(ownerId, updateGroupDto);
   }
 
   @Delete(':id')
   @HttpCode(HttpStatus.OK)
-  async deleteGroupById(@Param('id', ObjectIdPipe) id: string): Promise<{id: string}> {
+  async deleteGroupById(@Param('id', ObjectIdPipe) id: string): Promise<{ id: string }> {
     return this.familyGroupService.deleteGroupById(id);
   }
 }

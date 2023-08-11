@@ -4,8 +4,10 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import { Model } from 'mongoose';
 import { staticText } from '../../common/const/static-text';
 import { INotificationPayload } from '../../common/models/notification-payload.interface';
+import { FamilyGroup } from '../../family-group/models/family-group.schema';
 import { FamilyGroupService } from '../../family-group/services/family-group.service';
 import { SubscriptionService } from '../../notification/services/subscription.service';
+import { UserService } from '../../user/services/user.service';
 import { CreateGroceryDto } from '../dto/create-grocery.dto';
 import { eGroceryItemStatus } from '../models/grocery.model';
 import { Grocery } from '../schemas/grocery.schema';
@@ -14,21 +16,28 @@ import { Grocery } from '../schemas/grocery.schema';
 export class GroceryService {
   constructor(@InjectModel('grocery') private groceryModel: Model<Grocery>,
               private familyGroupService: FamilyGroupService,
-              private subscriptionService: SubscriptionService) {
+              private subscriptionService: SubscriptionService,
+              private userService: UserService) {
   }
 
-  async create(groceryDto: CreateGroceryDto, userId: string): Promise<Grocery> {
+  private static getActiveGroupMembersIds(familyGroup: FamilyGroup): string[] {
+    return familyGroup.members.filter(m => m.isAccepted).map(m => m.id);
+  }
+
+  async create(groceryDto: CreateGroceryDto, userId: string, username: string): Promise<Grocery> {
     const item = new this.groceryModel({ ...groceryDto, userId });
     await item.save();
     const familyGroup = await this.familyGroupService.getByUserId(userId);
     if (familyGroup) {
-      const notifierIds = [familyGroup.ownerId, ...familyGroup.memberIds];
-      const paylod: INotificationPayload = {
-        title: staticText.grocery.newProductNotificationTitle,
+      const memberIds = GroceryService.getActiveGroupMembersIds(familyGroup);
+      const notifierIds = [familyGroup.ownerId, ...memberIds].filter(id => id !== userId);
+      const user = await this.userService.getUser(username);
+      const payload: INotificationPayload = {
+        title: staticText.grocery.newProductNotificationTitle(user.firstName, user.lastName),
         body: item.name,
       };
       // Should be run in background, so that don't need to add `await`
-      this.subscriptionService.notifySubscribers(notifierIds, paylod);
+      this.subscriptionService.notifySubscribers(notifierIds, payload);
     }
     return item.toJSON();
   }
@@ -37,7 +46,8 @@ export class GroceryService {
     const userFamilyGroup = await this.familyGroupService.getByUserId(userId);
     let dbQuery = { userId } as { [key: string]: any };
     if (userFamilyGroup) {
-      const groupMemberIds: string[] = [...userFamilyGroup.memberIds, userFamilyGroup.ownerId];
+      const members = GroceryService.getActiveGroupMembersIds(userFamilyGroup);
+      const groupMemberIds: string[] = [...members, userFamilyGroup.ownerId];
       dbQuery = { userId: { $in: groupMemberIds } };
     }
     return this.groceryModel.find(dbQuery).sort({ createdAt: 1 }).exec();
