@@ -1,11 +1,13 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
+import { Cron, CronExpression } from '@nestjs/schedule';
 import { Model } from 'mongoose';
 import { staticText } from '../../common/const/static-text';
 import { INotificationPayload } from '../../common/models/notification-payload.interface';
 import { FamilyGroupService } from '../../family-group/services/family-group.service';
 import { SubscriptionService } from '../../notification/services/subscription.service';
 import { CreateGroceryDto } from '../dto/create-grocery.dto';
+import { eGroceryItemStatus } from '../models/grocery.model';
 import { Grocery } from '../schemas/grocery.schema';
 
 @Injectable()
@@ -63,5 +65,10 @@ export class GroceryService {
     } catch (e) {
       return e;
     }
+  }
+
+  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
+  async removeCompleted(): Promise<void> {
+    await this.groceryModel.deleteMany({status: eGroceryItemStatus.Done});
   }
 }
