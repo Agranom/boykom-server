@@ -6,7 +6,7 @@ export type FamilyGroupDocument = FamilyGroup & Document;
 @Schema({ virtuals: false, versionKey: false })
 export class GroupMember {
   @Prop({ required: true, type: String })
-  id: string;
+  userId: string;
 
   @Prop({ type: Boolean, default: false })
   isAccepted: boolean;

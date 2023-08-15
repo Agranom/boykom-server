@@ -24,15 +24,27 @@ export class FamilyGroupController {
     return this.familyGroupService.getByUserId(userId);
   }
 
-  @Put(':ownerId')
+  @Put(':groupId')
   @HttpCode(HttpStatus.OK)
-  async addMembersToGroup(@Body() updateGroupDto: UpdateGroupDto, @Param('ownerId') ownerId: string): Promise<FamilyGroup | IStatusResponse> {
-    return this.familyGroupService.addMembers(ownerId, updateGroupDto);
+  async addMembersToGroup(@Body() updateGroupDto: UpdateGroupDto, @Param('groupId', ObjectIdPipe) groupId: string): Promise<FamilyGroup | IStatusResponse> {
+    return this.familyGroupService.addMembers(groupId, updateGroupDto);
   }
 
   @Delete(':id')
   @HttpCode(HttpStatus.OK)
   async deleteGroupById(@Param('id', ObjectIdPipe) id: string): Promise<{ id: string }> {
     return this.familyGroupService.deleteGroupById(id);
+  }
+
+  @Post(':groupId/accept-membership')
+  @HttpCode(HttpStatus.OK)
+  async acceptMembership(@Param('groupId', ObjectIdPipe) groupId: string, @Req() req: IRequest): Promise<FamilyGroup> {
+    return this.familyGroupService.acceptMembership(groupId, req.user.userId);
+  }
+
+  @Delete(':groupId/:memberId')
+  @HttpCode(HttpStatus.OK)
+  async removeMemberFromGroup(@Param('groupId', ObjectIdPipe) groupId: string, @Param('memberId') memberId: string): Promise<{memberId: string}> {
+    return this.familyGroupService.removeMember(groupId, memberId);
   }
 }
