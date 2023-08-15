@@ -21,7 +21,7 @@ export class GroceryService {
   }
 
   private static getActiveGroupMembersIds(familyGroup: FamilyGroup): string[] {
-    return familyGroup.members.filter(m => m.isAccepted).map(m => m.id);
+    return familyGroup.members.filter(m => m.isAccepted).map(m => m.userId);
   }
 
   async create(groceryDto: CreateGroceryDto, userId: string, username: string): Promise<Grocery> {
@@ -46,9 +46,13 @@ export class GroceryService {
     const userFamilyGroup = await this.familyGroupService.getByUserId(userId);
     let dbQuery = { userId } as { [key: string]: any };
     if (userFamilyGroup) {
-      const members = GroceryService.getActiveGroupMembersIds(userFamilyGroup);
-      const groupMemberIds: string[] = [...members, userFamilyGroup.ownerId];
-      dbQuery = { userId: { $in: groupMemberIds } };
+      const memberIds = GroceryService.getActiveGroupMembersIds(userFamilyGroup);
+      const isMemberActive = userFamilyGroup.members.find(m => m.userId === userId)?.isAccepted
+        || userFamilyGroup.ownerId === userId;
+      if (isMemberActive) {
+        const groupMemberIds: string[] = [...memberIds, userFamilyGroup.ownerId];
+        dbQuery = { userId: { $in: groupMemberIds } };
+      }
     }
     return this.groceryModel.find(dbQuery).sort({ createdAt: 1 }).exec();
   }
@@ -79,6 +83,6 @@ export class GroceryService {
 
   @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
   async removeCompleted(): Promise<void> {
-    await this.groceryModel.deleteMany({status: eGroceryItemStatus.Done});
+    await this.groceryModel.deleteMany({ status: eGroceryItemStatus.Done });
   }
 }
