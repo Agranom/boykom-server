@@ -39,7 +39,7 @@ export class FamilyGroupController {
   @Post(':groupId/accept-membership')
   @HttpCode(HttpStatus.OK)
   async acceptMembership(@Param('groupId', ObjectIdPipe) groupId: string, @Req() req: IRequest): Promise<FamilyGroup> {
-    return this.familyGroupService.acceptMembership(groupId, req.user.userId);
+    return this.familyGroupService.acceptMembership(groupId, req.user);
   }
 
   @Delete(':groupId/:memberId')
