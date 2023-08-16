@@ -13,7 +13,7 @@ export class SubscriptionService {
   }
 
   async createUserSubscription(userId: string, subscription: Subscription): Promise<any> {
-    return this.subscriptionModel.findOneAndUpdate({ userId }, {
+    return this.subscriptionModel.findOneAndUpdate({ $and: [{ userId }, { 'subscriptions.userAgent': { $ne: subscription.userAgent } }] }, {
       userId,
       $addToSet: { subscriptions: subscription },
     }, { new: true, setDefaultsOnInsert: true, upsert: true });
@@ -22,8 +22,8 @@ export class SubscriptionService {
   async notifySubscribers(userIds: string[], payload: INotificationPayload): Promise<any> {
     const subscriptionDocs: UserSubscriptions[] = await this.subscriptionModel.find({ userId: { $in: userIds } }, { subscriptions: 1 });
     const subscriptions: Subscription[] = subscriptionDocs.map(s => s.subscriptions).flat();
-    const parallelSubscriptionCalls = subscriptions.map((subscription) => {
-      return webPush.sendNotification(subscription, JSON.stringify(payload));
+    const parallelSubscriptionCalls = subscriptions.map(({ userAgent, ...sub }) => {
+      return webPush.sendNotification(sub, JSON.stringify(payload));
     });
     return Promise.allSettled(parallelSubscriptionCalls);
   }

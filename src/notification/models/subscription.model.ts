@@ -12,6 +12,7 @@ export class Subscription {
   endpoint: string;
   keys: SubscriptionKeys;
   expirationTime: number | null;
+  userAgent: string;
 }
 
 @Schema({ versionKey: false })

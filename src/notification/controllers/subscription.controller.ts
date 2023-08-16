@@ -11,7 +11,7 @@ export class SubscriptionController {
 
   @Post()
   async subscribe(@Body() subscription: Subscription, @Res() res: Response, @Req() req: IRequest): Promise<void> {
-    await this.subscriptionService.createUserSubscription(req.user.userId, subscription);
+    await this.subscriptionService.createUserSubscription(req.user.userId, { ...subscription, userAgent: req.get('User-Agent') || 'unknown agent' });
 
     res.status(200).json({ 'subscribed': true });
   }
