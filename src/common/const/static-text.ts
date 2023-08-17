@@ -13,5 +13,11 @@ export const staticText = {
       title: 'Увы(',
       body: (firstName: string, lastName: string) => `${firstName} ${lastName} покинул(-а) группу!`,
     }
+  },
+  subscription: {
+    create: {
+      userAlreadySubscribed: 'Пользователь уже подписан.',
+      success: 'Подписка создана',
+    }
   }
 }

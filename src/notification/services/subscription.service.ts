@@ -1,7 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
+import { staticText } from '../../common/const/static-text';
 import { INotificationPayload } from '../../common/models/notification-payload.interface';
+import { IStatusResponse } from '../../common/models/status-response.interface';
 import { Subscription, UserSubscriptions, UserSubscriptionsDocument } from '../models/subscription.model';
 
 const webPush = require('web-push');
@@ -12,11 +14,16 @@ export class SubscriptionService {
     webPush.setVapidDetails(process.env.WEB_PUSH_CONTACT, process.env.PUBLIC_VAPID_KEY, process.env.PRIVATE_VAPID_KEY);
   }
 
-  async createUserSubscription(userId: string, subscription: Subscription): Promise<any> {
-    return this.subscriptionModel.findOneAndUpdate({ $and: [{ userId }, { 'subscriptions.userAgent': { $ne: subscription.userAgent } }] }, {
+  async createUserSubscription(userId: string, subscription: Subscription): Promise<IStatusResponse> {
+    const isExist = await this.subscriptionModel.exists({ $and: [{ userId }, { 'subscriptions.userAgent': subscription.userAgent }] });
+    if (isExist) {
+      return { success: false, message: staticText.subscription.create.userAlreadySubscribed };
+    }
+    await this.subscriptionModel.findOneAndUpdate({ userId }, {
       userId,
       $addToSet: { subscriptions: subscription },
     }, { new: true, setDefaultsOnInsert: true, upsert: true });
+    return { success: true, message: staticText.subscription.create.success };
   }
 
   async notifySubscribers(userIds: string[], payload: INotificationPayload): Promise<any> {
