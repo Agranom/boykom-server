@@ -13,7 +13,7 @@ export class AuthController {
   @Post('sign-up')
   @HttpCode(HttpStatus.CREATED)
   async signUp(@Body() newUser: SignUpDto) {
-    return this.authService.signUp(newUser);
+    return this.authService.signUp({ ...newUser, username: newUser.username.toLowerCase() });
   }
 
   @Public()
