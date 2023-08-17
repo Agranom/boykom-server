@@ -20,6 +20,6 @@ export class AuthController {
   @Post('sign-in')
   @HttpCode(HttpStatus.OK)
   async signIn(@Body() signInDto: SignInDto) {
-    return this.authService.signIn(signInDto);
+    return this.authService.signIn({ ...signInDto, username: signInDto.username.toLowerCase() });
   }
 }
