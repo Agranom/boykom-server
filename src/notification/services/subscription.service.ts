@@ -21,7 +21,7 @@ export class SubscriptionService {
     }
     await this.subscriptionModel.findOneAndUpdate({ userId }, {
       userId,
-      $addToSet: { subscriptions: subscription },
+      $set: { subscriptions: [subscription] },
     }, { new: true, setDefaultsOnInsert: true, upsert: true });
     return { success: true, message: staticText.subscription.create.success };
   }
