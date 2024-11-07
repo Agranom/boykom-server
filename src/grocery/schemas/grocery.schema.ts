@@ -25,4 +25,3 @@ GrocerySchema.set('toJSON', {
     delete ret.userId;
   },
 });
-

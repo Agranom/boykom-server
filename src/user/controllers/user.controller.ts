@@ -5,8 +5,7 @@ import { UserService } from '../services/user.service';
 
 @Controller('users')
 export class UserController {
-  constructor(private userService: UserService) {
-  }
+  constructor(private userService: UserService) {}
 
   @Get()
   @HttpCode(HttpStatus.OK)

@@ -14,14 +14,15 @@ import { Grocery } from '../schemas/grocery.schema';
 
 @Injectable()
 export class GroceryService {
-  constructor(@InjectModel('grocery') private groceryModel: Model<Grocery>,
-              private familyGroupService: FamilyGroupService,
-              private subscriptionService: SubscriptionService,
-              private userService: UserService) {
-  }
+  constructor(
+    @InjectModel('grocery') private groceryModel: Model<Grocery>,
+    private familyGroupService: FamilyGroupService,
+    private subscriptionService: SubscriptionService,
+    private userService: UserService,
+  ) {}
 
   private static getActiveGroupMembersIds(familyGroup: FamilyGroup): string[] {
-    return familyGroup.members.filter(m => m.isAccepted).map(m => m.userId);
+    return familyGroup.members.filter((m) => m.isAccepted).map((m) => m.userId);
   }
 
   async create(groceryDto: CreateGroceryDto, userId: string, username: string): Promise<Grocery> {
@@ -30,7 +31,7 @@ export class GroceryService {
     const familyGroup = await this.familyGroupService.getByUserId(userId);
     if (familyGroup) {
       const memberIds = GroceryService.getActiveGroupMembersIds(familyGroup);
-      const notifierIds = [familyGroup.ownerId, ...memberIds].filter(id => id !== userId);
+      const notifierIds = [familyGroup.ownerId, ...memberIds].filter((id) => id !== userId);
       const user = await this.userService.getUser(username);
       const payload: INotificationPayload = {
         title: staticText.grocery.newProductNotificationTitle(user.firstName, user.lastName),
@@ -47,8 +48,9 @@ export class GroceryService {
     let dbQuery = { userId } as { [key: string]: any };
     if (userFamilyGroup) {
       const memberIds = GroceryService.getActiveGroupMembersIds(userFamilyGroup);
-      const isMemberActive = userFamilyGroup.members.find(m => m.userId === userId)?.isAccepted
-        || userFamilyGroup.ownerId === userId;
+      const isMemberActive =
+        userFamilyGroup.members.find((m) => m.userId === userId)?.isAccepted ||
+        userFamilyGroup.ownerId === userId;
       if (isMemberActive) {
         const groupMemberIds: string[] = [...memberIds, userFamilyGroup.ownerId];
         dbQuery = { userId: { $in: groupMemberIds } };
@@ -59,7 +61,11 @@ export class GroceryService {
 
   async updateById(id: string, groceryDto: CreateGroceryDto): Promise<Grocery | NotFoundException> {
     try {
-      const newItem = await this.groceryModel.findByIdAndUpdate(id, { $set: groceryDto }, { new: true });
+      const newItem = await this.groceryModel.findByIdAndUpdate(
+        id,
+        { $set: groceryDto },
+        { new: true },
+      );
       if (!newItem) {
         return new NotFoundException();
       }

@@ -8,8 +8,7 @@ import { SignUpDto } from '../dto/sign-up.dto';
 
 @Injectable()
 export class AuthService {
-  constructor(private userService: UserService, private jwtService: JwtService) {
-  }
+  constructor(private userService: UserService, private jwtService: JwtService) {}
 
   async signUp(newUserDto: SignUpDto): Promise<void> {
     return this.userService.createUser(newUserDto);

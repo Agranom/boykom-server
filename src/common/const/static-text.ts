@@ -1,6 +1,7 @@
 export const staticText = {
   grocery: {
-    newProductNotificationTitle: (firstName: string, lastName: string) => `${firstName} ${lastName} добавил(-а) новый товар`,
+    newProductNotificationTitle: (firstName: string, lastName: string) =>
+      `${firstName} ${lastName} добавил(-а) новый товар`,
   },
   familyGroup: {
     memberAlreadyExists: 'Пользователь уже состоит в группе',
@@ -12,12 +13,12 @@ export const staticText = {
     removeMember: {
       title: 'Увы(',
       body: (firstName: string, lastName: string) => `${firstName} ${lastName} покинул(-а) группу!`,
-    }
+    },
   },
   subscription: {
     create: {
       userAlreadySubscribed: 'Пользователь уже подписан.',
       success: 'Подписка создана',
-    }
-  }
-}
+    },
+  },
+};

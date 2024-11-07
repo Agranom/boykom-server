@@ -9,4 +9,3 @@ export interface IUserRequestPayload {
 export interface IRequest extends Request {
   user: IUserRequestPayload;
 }
-

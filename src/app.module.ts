@@ -29,9 +29,6 @@ import { SubscriptionModule } from './notification/subscription.module';
     SubscriptionModule,
   ],
   controllers: [],
-  providers: [
-    { provide: APP_GUARD, useClass: AuthGuard },
-  ],
+  providers: [{ provide: APP_GUARD, useClass: AuthGuard }],
 })
-export class AppModule {
-}
+export class AppModule {}

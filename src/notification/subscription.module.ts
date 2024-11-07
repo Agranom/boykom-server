@@ -5,12 +5,9 @@ import { UserSubscriptionsSchema } from './models/subscription.model';
 import { SubscriptionService } from './services/subscription.service';
 
 @Module({
-  imports: [
-    MongooseModule.forFeature([{ name: 'subscription', schema: UserSubscriptionsSchema }]),
-  ],
+  imports: [MongooseModule.forFeature([{ name: 'subscription', schema: UserSubscriptionsSchema }])],
   controllers: [SubscriptionController],
   providers: [SubscriptionService],
   exports: [SubscriptionService],
 })
-export class SubscriptionModule {
-}
+export class SubscriptionModule {}

@@ -16,5 +16,4 @@ import { FamilyGroupService } from './services/family-group.service';
   providers: [FamilyGroupService],
   exports: [FamilyGroupService],
 })
-export class FamilyGroupModule {
-}
+export class FamilyGroupModule {}

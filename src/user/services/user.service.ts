@@ -7,8 +7,7 @@ import { User, UserDocument } from '../models/user.schema';
 
 @Injectable()
 export class UserService {
-  constructor(@InjectModel('user') private userModel: Model<UserDocument>) {
-  }
+  constructor(@InjectModel('user') private userModel: Model<UserDocument>) {}
 
   async createUser(createUserDto: CreateUserDto): Promise<void> {
     await new this.userModel(createUserDto).save();
@@ -26,7 +25,6 @@ export class UserService {
   async getAll(excludeMe: boolean, userId: string): Promise<User[]> {
     const query = excludeMe ? { _id: { $nin: [userId] } } : {};
     const users: UserDocument[] = await this.userModel.find(query);
-    return users.map(u => u.toJSON());
+    return users.map((u) => u.toJSON());
   }
-
 }

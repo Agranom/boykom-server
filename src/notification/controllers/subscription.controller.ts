@@ -7,16 +7,17 @@ import { SubscriptionService } from '../services/subscription.service';
 
 @Controller('subscriptions')
 export class SubscriptionController {
-  constructor(private subscriptionService: SubscriptionService) {
-  }
+  constructor(private subscriptionService: SubscriptionService) {}
 
   @Post()
-  async subscribe(@Body() subscription: Subscription, @Res() res: Response, @Req() req: IRequest): Promise<IStatusResponse> {
+  async subscribe(
+    @Body() subscription: Subscription,
+    @Res() res: Response,
+    @Req() req: IRequest,
+  ): Promise<IStatusResponse> {
     return this.subscriptionService.createUserSubscription(req.user.userId, {
       ...subscription,
       userAgent: req.get('User-Agent') || 'unknown agent',
     });
   }
-
-
 }
