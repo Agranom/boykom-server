@@ -52,7 +52,7 @@ export class SubscriptionService {
       { subscriptions: 1 },
     );
     const subscriptions: Subscription[] = subscriptionDocs.map((s) => s.subscriptions).flat();
-    const parallelSubscriptionCalls = subscriptions.map(({ _, ...sub }) => {
+    const parallelSubscriptionCalls = subscriptions.map(({ userAgent: _, ...sub }) => {
       return webPush.sendNotification(sub, JSON.stringify(payload));
     });
     return Promise.allSettled(parallelSubscriptionCalls);
