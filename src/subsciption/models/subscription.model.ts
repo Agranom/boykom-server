@@ -3,7 +3,7 @@ import { Document } from 'mongoose';
 
 export type UserSubscriptionsDocument = UserSubscriptions & Document;
 
-class SubscriptionKeys {
+export class SubscriptionKeys {
   p256dh: string;
   auth: string;
 }

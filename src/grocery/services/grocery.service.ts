@@ -6,7 +6,7 @@ import { staticText } from '../../common/const/static-text';
 import { INotificationPayload } from '../../common/models/notification-payload.interface';
 import { FamilyGroup } from '../../family-group/models/family-group.schema';
 import { FamilyGroupService } from '../../family-group/services/family-group.service';
-import { SubscriptionService } from '../../notification/services/subscription.service';
+import { SubscriptionService } from '../../subsciption/services/subscription.service';
 import { UserService } from '../../user/services/user.service';
 import { CreateGroceryDto } from '../dto/create-grocery.dto';
 import { eGroceryItemStatus } from '../models/grocery.model';

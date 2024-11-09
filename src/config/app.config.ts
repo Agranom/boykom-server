@@ -1,5 +1,7 @@
+import { DataSourceOptions } from 'typeorm';
 import { ConfigHelper } from './config.helper';
 import { pgConfig, PgConfig } from './pg.config';
+import { typeOrmConfig } from './type-orm.config';
 import { webPushConfig, WebPushConfig } from './web-push.config';
 
 export interface AppConfig {
@@ -7,6 +9,7 @@ export interface AppConfig {
   jwtSecret: string;
   webPush: WebPushConfig;
   pgConfig: PgConfig;
+  typeOrmConfig: DataSourceOptions;
 }
 
 export const appConfig = (): AppConfig => ({
@@ -14,4 +17,5 @@ export const appConfig = (): AppConfig => ({
   jwtSecret: ConfigHelper.getOrThrow('JWT_SECRET'),
   webPush: webPushConfig(),
   pgConfig: pgConfig(),
+  typeOrmConfig: typeOrmConfig(),
 });

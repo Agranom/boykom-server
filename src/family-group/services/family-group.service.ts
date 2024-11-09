@@ -4,7 +4,7 @@ import { Model } from 'mongoose';
 import { staticText } from '../../common/const/static-text';
 import { IUserRequestPayload } from '../../common/models/request.interface';
 import { IStatusResponse } from '../../common/models/status-response.interface';
-import { SubscriptionService } from '../../notification/services/subscription.service';
+import { SubscriptionService } from '../../subsciption/services/subscription.service';
 import { UserService } from '../../user/services/user.service';
 import { CreateGroupDto } from '../dto/create-group.dto';
 import { UpdateGroupDto } from '../dto/update-group.dto';

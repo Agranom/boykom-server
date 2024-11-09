@@ -5,14 +5,16 @@ import { JwtModule } from '@nestjs/jwt';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ScheduleModule } from '@nestjs/schedule';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { DataSourceOptions } from 'typeorm';
+import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 import { AuthModule } from './auth/auth.module';
 import { AuthGuard } from './auth/guards/auth.guard';
 import { appConfig } from './config/app.config';
 import { PgConfig } from './config/pg.config';
 import { GroceryModule } from './grocery/grocery.module';
+import { SubscriptionModule } from './subsciption/subscription.module';
 import { UserModule } from './user/user.module';
 import { FamilyGroupModule } from './family-group/family-group.module';
-import { SubscriptionModule } from './notification/subscription.module';
 
 @Module({
   imports: [
@@ -27,16 +29,7 @@ import { SubscriptionModule } from './notification/subscription.module';
     }),
     TypeOrmModule.forRootAsync({
       useFactory: (configService: ConfigService) => {
-        const { host, port, dbName, user, password } =
-          configService.getOrThrow<PgConfig>('pgConfig');
-        return {
-          type: 'postgres',
-          host,
-          port,
-          username: user,
-          password,
-          database: dbName,
-        };
+        return configService.getOrThrow<DataSourceOptions>('typeOrmConfig');
       },
       inject: [ConfigService],
     }),
