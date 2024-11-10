@@ -1,4 +1,4 @@
-import { Entity, JoinColumn, ManyToOne } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
 import { BaseEntity } from '../../shared/entities/base.entity';
 import { UserEntity } from '../../user/entities/user.entity';
 import { FamilyGroupEntity } from './family-group.entity';
@@ -12,4 +12,7 @@ export class GroupMemberEntity extends BaseEntity {
   @ManyToOne(() => UserEntity, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'user_id' })
   user: UserEntity;
+
+  @Column({ type: 'boolean', default: false })
+  isAccepted: boolean;
 }
