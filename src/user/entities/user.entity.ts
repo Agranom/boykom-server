@@ -3,7 +3,7 @@ import { BaseEntity } from '../../shared/entities/base.entity';
 
 @Entity({ name: 'users' })
 export class UserEntity extends BaseEntity {
-  @Column({ type: 'varchar', length: 50 })
+  @Column({ type: 'varchar', length: 50, unique: true })
   username: string;
 
   @Column({ type: 'varchar', length: 300 })
