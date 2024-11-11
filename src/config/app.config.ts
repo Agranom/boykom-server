@@ -10,6 +10,7 @@ export interface AppConfig {
   webPush: WebPushConfig;
   pgConfig: PgConfig;
   typeOrmConfig: DataSourceOptions;
+  port: number;
 }
 
 export const appConfig = (): AppConfig => ({
@@ -18,4 +19,5 @@ export const appConfig = (): AppConfig => ({
   webPush: webPushConfig(),
   pgConfig: pgConfig(),
   typeOrmConfig: typeOrmConfig(),
+  port: Number(process.env.PORT) || 4000,
 });

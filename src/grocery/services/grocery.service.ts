@@ -32,7 +32,7 @@ export class GroceryService {
     if (familyGroup) {
       const memberIds = GroceryService.getActiveGroupMembersIds(familyGroup);
       const notifierIds = [familyGroup.ownerId, ...memberIds].filter((id) => id !== userId);
-      const user = await this.userService.getUser(username);
+      const user = await this.userService.getUserByUsername(username);
       const payload: INotificationPayload = {
         title: staticText.grocery.newProductNotificationTitle(user.firstName, user.lastName),
         body: item.name,

@@ -61,7 +61,7 @@ export class FamilyGroupService {
     if (!group) {
       throw new NotFoundException('Group was not found');
     }
-    const { firstName, lastName } = await this.userService.getUser(null, memberId);
+    const { firstName, lastName } = await this.userService.getUserById(memberId);
     const groupMembers = group.members.filter((m) => m.isAccepted && m.userId !== memberId);
     const notifierIds = [...groupMembers.map((m) => m.userId), group.ownerId];
     this.subscriptionService.notifySubscribers(notifierIds, {
@@ -88,7 +88,7 @@ export class FamilyGroupService {
     if (!group) {
       throw new NotFoundException('Group was not found');
     }
-    const { firstName, lastName } = await this.userService.getUser(user.username);
+    const { firstName, lastName } = await this.userService.getUserByUsername(user.username);
     const groupMembers = group.members.filter((m) => m.isAccepted && m.userId !== user.userId);
     const notifierIds = [...groupMembers.map((m) => m.userId), group.ownerId];
     this.subscriptionService.notifySubscribers(notifierIds, {
