@@ -17,18 +17,33 @@ export class UserService {
     await this.repository.save(createUserDto);
   }
 
-  async getUserById(id: string): Promise<UserWithoutPasswordDto> {
+  async getUserById(id: string): Promise<User> {
     const result = await this.repository.findOne({ where: { id } });
 
     if (!result) {
       throw new NotFoundException(`User with ID ${id} not found`);
     }
 
-    return plainToInstance(UserWithoutPasswordDto, result);
+    return result;
   }
 
-  async getUserByUsername(username: string): Promise<User> {
-    const result = await this.repository.findOne({ where: { username } });
+  async getUserByUsername(
+    username: string,
+    { includePassword } = { includePassword: false },
+  ): Promise<User> {
+    let result: User | null;
+
+    if (includePassword) {
+      result = await this.repository
+        .createQueryBuilder('users')
+        .addSelect('users.password')
+        .where('users.username = :username', { username })
+        .getOne();
+    } else {
+      result = await this.repository.findOne({
+        where: { username },
+      });
+    }
 
     if (!result) {
       throw new NotFoundException(`User with username ${username} not found`);

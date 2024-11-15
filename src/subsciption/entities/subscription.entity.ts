@@ -1,5 +1,5 @@
 import { Column, Entity, JoinColumn, OneToOne } from 'typeorm';
-import { BaseEntity } from '../../shared/entities/base.entity';
+import { BaseEntity } from '../../common/entities/base.entity';
 import { User } from '../../user/entities/user.entity';
 import { SubscriptionKeys } from '../models/subscription.model';
 

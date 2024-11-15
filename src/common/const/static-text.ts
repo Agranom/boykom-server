@@ -5,6 +5,7 @@ export const staticText = {
   },
   familyGroup: {
     memberAlreadyExists: 'Пользователь уже состоит в группе',
+    memberIsOwner: 'Вы не можете приглашать сами себя',
     groupCreated: 'Запрос на вступление в группу отправлен',
     acceptMembershipPayload: {
       title: 'Ура!',

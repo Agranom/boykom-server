@@ -15,7 +15,7 @@ export class AuthService {
   }
 
   async signIn({ username, password }: SignInDto): Promise<SignInResponseDto> {
-    const user = await this.userService.getUserByUsername(username);
+    const user = await this.userService.getUserByUsername(username, { includePassword: true });
 
     if (!(await User.isPasswordValid(password, user.password))) {
       throw new UnauthorizedException();

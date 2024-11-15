@@ -4,7 +4,7 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import { Model } from 'mongoose';
 import { staticText } from '../../common/const/static-text';
 import { INotificationPayload } from '../../common/models/notification-payload.interface';
-import { FamilyGroup } from '../../family-group/models/family-group.schema';
+import { FamilyGroup } from '../../family-group/entities/family-group.entity';
 import { FamilyGroupService } from '../../family-group/services/family-group.service';
 import { SubscriptionService } from '../../subsciption/services/subscription.service';
 import { UserService } from '../../user/services/user.service';
@@ -31,7 +31,7 @@ export class GroceryService {
     const familyGroup = await this.familyGroupService.getByUserId(userId);
     if (familyGroup) {
       const memberIds = GroceryService.getActiveGroupMembersIds(familyGroup);
-      const notifierIds = [familyGroup.ownerId, ...memberIds].filter((id) => id !== userId);
+      const notifierIds = [familyGroup.owner.id, ...memberIds].filter((id) => id !== userId);
       const user = await this.userService.getUserByUsername(username);
       const payload: INotificationPayload = {
         title: staticText.grocery.newProductNotificationTitle(user.firstName, user.lastName),
@@ -50,9 +50,9 @@ export class GroceryService {
       const memberIds = GroceryService.getActiveGroupMembersIds(userFamilyGroup);
       const isMemberActive =
         userFamilyGroup.members.find((m) => m.userId === userId)?.isAccepted ||
-        userFamilyGroup.ownerId === userId;
+        userFamilyGroup.owner.id === userId;
       if (isMemberActive) {
-        const groupMemberIds: string[] = [...memberIds, userFamilyGroup.ownerId];
+        const groupMemberIds: string[] = [...memberIds, userFamilyGroup.owner.id];
         dbQuery = { userId: { $in: groupMemberIds } };
       }
     }

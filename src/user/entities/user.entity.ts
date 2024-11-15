@@ -2,7 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import * as bcrypt from 'bcrypt';
 import { Exclude } from 'class-transformer';
 import { Column, Entity } from 'typeorm';
-import { BaseEntity } from '../../shared/entities/base.entity';
+import { BaseEntity } from '../../common/entities/base.entity';
 
 @Entity({ name: 'users' })
 export class User extends BaseEntity {
@@ -11,7 +11,7 @@ export class User extends BaseEntity {
   username: string;
 
   @Exclude()
-  @Column({ type: 'varchar', length: 300 })
+  @Column({ type: 'varchar', length: 300, select: false })
   password: string;
 
   @ApiProperty()
