@@ -5,7 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, In, Not, Repository } from 'typeorm';
+import { DataSource, Not, Repository } from 'typeorm';
 import { staticText } from '../../common/const/static-text';
 import { IUserRequestPayload } from '../../common/models/request.interface';
 import { IStatusResponse } from '../../common/models/status-response.interface';
@@ -27,11 +27,13 @@ export class FamilyGroupService {
     private dataSource: DataSource,
   ) {}
 
-  async create({ userIds }: CreateGroupDto, ownerId: string): Promise<IStatusResponse> {
-    if (userIds.includes(ownerId)) {
+  async create({ username }: CreateGroupDto, ownerId: string): Promise<IStatusResponse> {
+    const { id: userMemberId } = await this.userService.getUserByUsername(username);
+
+    if (userMemberId === ownerId) {
       return { success: false, message: staticText.familyGroup.memberIsOwner };
     }
-    if (await this.isMemberExist([...userIds, ownerId])) {
+    if (await this.isMemberExist([userMemberId, ownerId])) {
       return { success: false, message: staticText.familyGroup.memberAlreadyExists };
     }
 
@@ -48,15 +50,13 @@ export class FamilyGroupService {
       }
       const newFamilyGroup = await queryRunner.manager.save(FamilyGroup, { owner });
 
-      const users = await queryRunner.manager.find<User>(User, { where: { id: In(userIds) } });
+      const member = await queryRunner.manager.findOne<User>(User, { where: { id: userMemberId } });
 
-      if (users.length !== userIds.length) {
-        const missingIds = userIds.filter((id) => !users.some((user) => user.id === id));
-
-        throw new Error(`Members with IDs ${missingIds.join(', ')} not found`);
+      if (!member) {
+        throw new Error(`Member with ID ${userMemberId} not found`);
       }
 
-      const groupMembers = [...users, owner].map((user) => {
+      const groupMembers = [member, owner].map((user) => {
         const member = new GroupMember();
 
         member.group = newFamilyGroup;
@@ -73,6 +73,8 @@ export class FamilyGroupService {
       return { success: true, message: staticText.familyGroup.groupCreated };
     } catch (e) {
       await queryRunner.rollbackTransaction();
+
+      // TODO handle QueryFailedError
 
       throw new InternalServerErrorException(e.message);
     } finally {
@@ -119,6 +121,8 @@ export class FamilyGroupService {
     if (await this.isMemberExist([user.id])) {
       return { success: false, message: staticText.familyGroup.memberAlreadyExists };
     }
+
+    // TODO handle QueryFailedError
 
     return this.memberRepository.save({ user, group });
   }

@@ -1,5 +1,4 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Exclude } from 'class-transformer';
 import {
   BeforeInsert,
   BeforeUpdate,
@@ -15,7 +14,7 @@ import { User } from '../../user/entities/user.entity';
 import { FamilyGroup } from './family-group.entity';
 
 @Entity({ name: 'group_members' })
-@Unique(['groupId', 'userId'])
+@Unique('UQ_userId', ['userId'])
 @Index(['groupId'], { unique: true, where: '"is_owner" = true' })
 export class GroupMember extends BaseEntity {
   @ManyToOne(() => FamilyGroup, (group) => group.members, { onDelete: 'CASCADE' })

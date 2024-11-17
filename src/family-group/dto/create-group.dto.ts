@@ -1,9 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { ArrayNotEmpty, IsArray } from 'class-validator';
+import { PickType } from '@nestjs/swagger';
+import { AddGroupMemberDto } from './add-group-member.dto';
 
-export class CreateGroupDto {
-  @ApiProperty()
-  @IsArray()
-  @ArrayNotEmpty()
-  userIds: string[];
-}
+export class CreateGroupDto extends PickType(AddGroupMemberDto, ['username']) {}
