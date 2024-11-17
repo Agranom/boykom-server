@@ -37,20 +37,15 @@ export class FamilyGroupService {
       return { success: false, message: staticText.familyGroup.memberAlreadyExists };
     }
 
-    const queryRunner = this.dataSource.createQueryRunner();
-
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
-
-    try {
-      const owner = await queryRunner.manager.findOne<User>(User, { where: { id: ownerId } });
+    await this.dataSource.transaction(async (manager) => {
+      const owner = await manager.findOne<User>(User, { where: { id: ownerId } });
 
       if (!owner) {
         throw new Error('Owner not found');
       }
-      const newFamilyGroup = await queryRunner.manager.save(FamilyGroup, { owner });
+      const newFamilyGroup = await manager.save(FamilyGroup, { owner });
 
-      const member = await queryRunner.manager.findOne<User>(User, { where: { id: userMemberId } });
+      const member = await manager.findOne<User>(User, { where: { id: userMemberId } });
 
       if (!member) {
         throw new Error(`Member with ID ${userMemberId} not found`);
@@ -66,20 +61,10 @@ export class FamilyGroupService {
         return member;
       });
 
-      await queryRunner.manager.save(GroupMember, groupMembers);
+      await manager.save(GroupMember, groupMembers);
+    });
 
-      await queryRunner.commitTransaction();
-
-      return { success: true, message: staticText.familyGroup.groupCreated };
-    } catch (e) {
-      await queryRunner.rollbackTransaction();
-
-      // TODO handle QueryFailedError
-
-      throw new InternalServerErrorException(e.message);
-    } finally {
-      await queryRunner.release();
-    }
+    return { success: true, message: staticText.familyGroup.groupCreated };
   }
 
   async getByUserId(id: string): Promise<FamilyGroup | null> {
