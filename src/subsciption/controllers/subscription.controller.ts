@@ -2,7 +2,7 @@ import { Body, Controller, HttpCode, HttpStatus, Post, Req } from '@nestjs/commo
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { IRequest } from '../../common/models/request.interface';
 import { IStatusResponse } from '../../common/models/status-response.interface';
-import { CreateSubscriptionDto } from '../dto/create-subscription.dto';
+import { UpsertSubscriptionDto } from '../dto/upsert-subscription.dto';
 import { SubscriptionService } from '../services/subscription.service';
 
 @Controller('subscriptions')
@@ -14,7 +14,7 @@ export class SubscriptionController {
   @Post()
   @HttpCode(HttpStatus.CREATED)
   async subscribe(
-    @Body() dto: CreateSubscriptionDto,
+    @Body() dto: UpsertSubscriptionDto,
     @Req() req: IRequest,
   ): Promise<IStatusResponse> {
     return this.subscriptionService.createOrUpdate(

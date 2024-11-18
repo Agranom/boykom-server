@@ -4,7 +4,7 @@ import { staticText } from '../../common/const/static-text';
 import { INotificationPayload } from '../../common/models/notification-payload.interface';
 import { IStatusResponse } from '../../common/models/status-response.interface';
 import { PushNotificationService } from '../../providers/push-notification/push-notification.service';
-import { CreateSubscriptionDto } from '../dto/create-subscription.dto';
+import { UpsertSubscriptionDto } from '../dto/upsert-subscription.dto';
 import { SubscriptionRepository } from './subscription.repository';
 
 @Injectable()
@@ -16,7 +16,7 @@ export class SubscriptionService {
 
   async createOrUpdate(
     userId: string,
-    dto: CreateSubscriptionDto,
+    dto: UpsertSubscriptionDto,
     userAgent: string,
   ): Promise<IStatusResponse> {
     const isExist = await this.repository.exists({ where: { userId, userAgent } });

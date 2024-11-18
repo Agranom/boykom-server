@@ -17,7 +17,7 @@ export class SubscriptionKeys {
 
 @Entity({ name: 'subscriptions' })
 @Unique('UQ_userId', ['userId'])
-export class SubscriptionEntity extends BaseEntity {
+export class Subscription extends BaseEntity {
   @ApiProperty({ type: User })
   @OneToOne(() => User, { onDelete: 'CASCADE', nullable: false })
   @JoinColumn({ name: 'user_id' })
