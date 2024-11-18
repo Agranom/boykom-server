@@ -38,7 +38,7 @@ export class FamilyGroupController {
   @Get('/my-group')
   @HttpCode(HttpStatus.OK)
   async getByOwnerId(@Req() req: IRequest): Promise<FamilyGroup | null> {
-    return this.familyGroupService.getByUserId(req.user.userId);
+    return this.familyGroupService.getWithMembersByUserId(req.user.userId);
   }
 
   @Post(':id/member')

@@ -67,7 +67,7 @@ export class FamilyGroupService {
     return { success: true, message: staticText.familyGroup.groupCreated };
   }
 
-  async getByUserId(id: string): Promise<FamilyGroup | null> {
+  async getWithMembersByUserId(id: string): Promise<FamilyGroup | null> {
     const groupMember = await this.memberRepository.findOne({
       where: { userId: id },
       select: ['groupId'],
@@ -168,6 +168,10 @@ export class FamilyGroupService {
       title: staticText.familyGroup.acceptMembershipPayload.title,
       bodyFn: staticText.familyGroup.acceptMembershipPayload.body,
     });
+  }
+
+  async getActiveMembersByUserId(userId: string): Promise<GroupMember[]> {
+    return this.memberRepository.find({ where: { isAccepted: true, userId } });
   }
 
   private async isMemberExist(userIds: string[]): Promise<boolean> {
