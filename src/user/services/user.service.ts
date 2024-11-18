@@ -1,24 +1,23 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import * as bcrypt from 'bcrypt';
 import { plainToInstance } from 'class-transformer';
-import { Not, Repository } from 'typeorm';
+import { Not } from 'typeorm';
 import { CreateUserDto } from '../dto/create-user.dto';
 import { UserWithoutPasswordDto } from '../dto/user-without-password.dto';
 import { User } from '../entities/user.entity';
+import { UserRepository } from './user.repository';
 
 @Injectable()
 export class UserService {
-  constructor(@InjectRepository(User) private repository: Repository<User>) {}
+  constructor(private repository: UserRepository) {}
 
   async createUser(createUserDto: CreateUserDto): Promise<void> {
     createUserDto.password = await User.hashPassword(createUserDto.password);
 
-    await this.repository.save(createUserDto);
+    await this.repository.createOne(createUserDto);
   }
 
   async getUserById(id: string): Promise<User> {
-    const result = await this.repository.findOne({ where: { id } });
+    const result = await this.repository.findById(id);
 
     if (!result) {
       throw new NotFoundException(`User with ID ${id} not found`);
@@ -34,11 +33,7 @@ export class UserService {
     let result: User | null;
 
     if (includePassword) {
-      result = await this.repository
-        .createQueryBuilder('users')
-        .addSelect('users.password')
-        .where('users.username = :username', { username })
-        .getOne();
+      result = await this.repository.getUserWithPassword(username);
     } else {
       result = await this.repository.findOne({
         where: { username },
