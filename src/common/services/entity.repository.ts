@@ -1,8 +1,9 @@
-import { DeepPartial, DeleteResult, Repository } from 'typeorm';
+import { DeepPartial, DeleteResult, InsertResult, Repository } from 'typeorm';
 import { ObjectLiteral } from 'typeorm/common/ObjectLiteral';
 import { FindManyOptions } from 'typeorm/find-options/FindManyOptions';
 import { FindOptionsWhere } from 'typeorm/find-options/FindOptionsWhere';
 import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
+import { UpsertOptions } from 'typeorm/repository/UpsertOptions';
 
 export abstract class EntityRepository<T extends ObjectLiteral> {
   constructor(protected readonly repository: Repository<T>) {}
@@ -29,11 +30,22 @@ export abstract class EntityRepository<T extends ObjectLiteral> {
     return result.raw[0];
   }
 
+  async upsertOne(
+    data: QueryDeepPartialEntity<T>,
+    conflictPathsOrOptions: string[] | UpsertOptions<T>,
+  ): Promise<InsertResult> {
+    return this.repository.upsert(data, conflictPathsOrOptions);
+  }
+
   async deleteById(id: string): Promise<DeleteResult> {
     return this.repository.delete(id);
   }
 
   async deleteMany(query: FindOptionsWhere<T>): Promise<DeleteResult> {
     return this.repository.delete(query);
+  }
+
+  async exists(options?: FindManyOptions<T>): Promise<boolean> {
+    return this.repository.exists(options);
   }
 }

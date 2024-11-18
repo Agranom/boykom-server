@@ -1,60 +1,49 @@
 import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { In } from 'typeorm';
 import { staticText } from '../../common/const/static-text';
 import { INotificationPayload } from '../../common/models/notification-payload.interface';
 import { IStatusResponse } from '../../common/models/status-response.interface';
-import {
-  Subscription,
-  UserSubscriptions,
-  UserSubscriptionsDocument,
-} from '../models/subscription.model';
-
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const webPush = require('web-push');
+import { PushNotificationService } from '../../providers/push-notification/push-notification.service';
+import { CreateSubscriptionDto } from '../dto/create-subscription.dto';
+import { SubscriptionRepository } from './subscription.repository';
 
 @Injectable()
 export class SubscriptionService {
   constructor(
-    @InjectModel('subscription') private subscriptionModel: Model<UserSubscriptionsDocument>,
-  ) {
-    webPush.setVapidDetails(
-      process.env.WEB_PUSH_CONTACT,
-      process.env.PUBLIC_VAPID_KEY,
-      process.env.PRIVATE_VAPID_KEY,
-    );
-  }
+    private repository: SubscriptionRepository,
+    private pushNotificationService: PushNotificationService,
+  ) {}
 
-  async createUserSubscription(
+  async createOrUpdate(
     userId: string,
-    subscription: Subscription,
+    dto: CreateSubscriptionDto,
+    userAgent: string,
   ): Promise<IStatusResponse> {
-    const isExist = await this.subscriptionModel.exists({
-      $and: [{ userId }, { 'subscriptions.userAgent': subscription.userAgent }],
-    });
+    const isExist = await this.repository.exists({ where: { userId, userAgent } });
+
     if (isExist) {
       return { success: false, message: staticText.subscription.create.userAlreadySubscribed };
     }
-    await this.subscriptionModel.findOneAndUpdate(
-      { userId },
+
+    await this.repository.upsertOne(
       {
         userId,
-        subscriptions: [subscription],
+        userAgent,
+        keys: dto.keys,
+        endpoint: dto.endpoint,
       },
-      { new: true, setDefaultsOnInsert: true, upsert: true },
+      ['userId'],
     );
+
     return { success: true, message: staticText.subscription.create.success };
   }
 
-  async notifySubscribers(userIds: string[], payload: INotificationPayload): Promise<any> {
-    const subscriptionDocs: UserSubscriptions[] = await this.subscriptionModel.find(
-      { userId: { $in: userIds } },
-      { subscriptions: 1 },
-    );
-    const subscriptions: Subscription[] = subscriptionDocs.map((s) => s.subscriptions).flat();
-    const parallelSubscriptionCalls = subscriptions.map(({ userAgent: _, ...sub }) => {
-      return webPush.sendNotification(sub, JSON.stringify(payload));
+  async notifySubscribers(userIds: string[], payload: INotificationPayload): Promise<void> {
+    const subscriptions = await this.repository.find({ where: { userId: In(userIds) } });
+    const parallelSubscriptionCalls = subscriptions.map(({ endpoint, keys }) => {
+      return this.pushNotificationService.send({ endpoint, keys }, payload);
     });
-    return Promise.allSettled(parallelSubscriptionCalls);
+
+    await Promise.allSettled(parallelSubscriptionCalls);
   }
 }

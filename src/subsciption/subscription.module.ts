@@ -1,18 +1,15 @@
 import { Module } from '@nestjs/common';
-import { MongooseModule } from '@nestjs/mongoose';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { PushNotificationModule } from '../providers/push-notification/push-notification.module';
 import { SubscriptionController } from './controllers/subscription.controller';
 import { SubscriptionEntity } from './entities/subscription.entity';
-import { UserSubscriptionsSchema } from './models/subscription.model';
+import { SubscriptionRepository } from './services/subscription.repository';
 import { SubscriptionService } from './services/subscription.service';
 
 @Module({
-  imports: [
-    MongooseModule.forFeature([{ name: 'subscription', schema: UserSubscriptionsSchema }]),
-    TypeOrmModule.forFeature([SubscriptionEntity]),
-  ],
+  imports: [TypeOrmModule.forFeature([SubscriptionEntity]), PushNotificationModule],
   controllers: [SubscriptionController],
-  providers: [SubscriptionService],
+  providers: [SubscriptionService, SubscriptionRepository],
   exports: [SubscriptionService],
 })
 export class SubscriptionModule {}
