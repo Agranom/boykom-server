@@ -4,8 +4,7 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, Not, Repository } from 'typeorm';
+import { DataSource, Not } from 'typeorm';
 import { staticText } from '../../common/const/static-text';
 import { IUserRequestPayload } from '../../common/models/request.interface';
 import { IStatusResponse } from '../../common/models/status-response.interface';
@@ -16,12 +15,14 @@ import { AddGroupMemberDto } from '../dto/add-group-member.dto';
 import { CreateGroupDto } from '../dto/create-group.dto';
 import { FamilyGroup } from '../entities/family-group.entity';
 import { GroupMember } from '../entities/group-member.entity';
+import { FamilyGroupRepository } from './family-group.repository';
+import { GroupMemberRepository } from './group-member.repository';
 
 @Injectable()
 export class FamilyGroupService {
   constructor(
-    @InjectRepository(FamilyGroup) private groupRepository: Repository<FamilyGroup>,
-    @InjectRepository(GroupMember) private memberRepository: Repository<GroupMember>,
+    private groupRepository: FamilyGroupRepository,
+    private memberRepository: GroupMemberRepository,
     private subscriptionService: SubscriptionService,
     private userService: UserService,
     private dataSource: DataSource,
@@ -33,7 +34,7 @@ export class FamilyGroupService {
     if (userMemberId === ownerId) {
       return { success: false, message: staticText.familyGroup.memberIsOwner };
     }
-    if (await this.isMemberExist([userMemberId, ownerId])) {
+    if (await this.memberRepository.isMemberExist([userMemberId, ownerId])) {
       return { success: false, message: staticText.familyGroup.memberAlreadyExists };
     }
 
@@ -103,13 +104,13 @@ export class FamilyGroupService {
       throw new ForbiddenException('Only group owner allowed to add a new member');
     }
 
-    if (await this.isMemberExist([user.id])) {
+    if (await this.memberRepository.isMemberExist([user.id])) {
       return { success: false, message: staticText.familyGroup.memberAlreadyExists };
     }
 
     // TODO handle QueryFailedError
 
-    return this.memberRepository.save({ user, group });
+    return this.memberRepository.createOne({ user, group });
   }
 
   async removeMember(groupId: string, memberId: string): Promise<{ memberId: string }> {
@@ -122,7 +123,7 @@ export class FamilyGroupService {
       throw new NotFoundException(`Member with ID ${memberId} not found`);
     }
 
-    const deleteResult = await this.memberRepository.delete(member.id);
+    const deleteResult = await this.memberRepository.deleteById(member.id);
 
     if (!deleteResult.affected) {
       throw new InternalServerErrorException(`Couldn't delete member`);
@@ -137,7 +138,7 @@ export class FamilyGroupService {
   }
 
   async deleteGroupById(id: string): Promise<{ id: string }> {
-    const deleteResult = await this.groupRepository.delete(id);
+    const deleteResult = await this.groupRepository.deleteById(id);
 
     if (!deleteResult.affected) {
       throw new NotFoundException('Group was not found');
@@ -162,23 +163,12 @@ export class FamilyGroupService {
 
     currentMember.isAccepted = true;
 
-    await this.memberRepository.save(currentMember);
+    await this.memberRepository.createOne(currentMember);
 
     this.notifyGroupMembers(currentMember.user, groupId, {
       title: staticText.familyGroup.acceptMembershipPayload.title,
       bodyFn: staticText.familyGroup.acceptMembershipPayload.body,
     });
-  }
-
-  async getActiveMembersByUserId(userId: string): Promise<GroupMember[]> {
-    return this.memberRepository.find({ where: { isAccepted: true, userId } });
-  }
-
-  private async isMemberExist(userIds: string[]): Promise<boolean> {
-    return this.memberRepository
-      .createQueryBuilder('member')
-      .where('member.userId IN (:...userIds)', { userIds })
-      .getExists();
   }
 
   private async notifyGroupMembers(

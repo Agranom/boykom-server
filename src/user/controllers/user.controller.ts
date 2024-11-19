@@ -23,7 +23,7 @@ export class UserController {
   @Get('me')
   @HttpCode(HttpStatus.OK)
   async getUser(@Req() req: IRequest): Promise<UserWithoutPasswordDto> {
-    const user = await this.userService.getUserByUsername(req.user.username);
+    const user = await this.userService.getUserById(req.user.userId);
     return plainToInstance(UserWithoutPasswordDto, user);
   }
 }
