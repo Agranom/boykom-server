@@ -16,14 +16,13 @@ export class SubscriptionKeys {
 }
 
 @Entity({ name: 'subscriptions' })
-@Unique('UQ_userId', ['userId'])
 export class Subscription extends BaseEntity {
   @ApiProperty({ type: User })
   @OneToOne(() => User, { onDelete: 'CASCADE', nullable: false })
   @JoinColumn({ name: 'user_id' })
   user: User;
 
-  @Column({ select: false })
+  @Column({ select: false, unique: true })
   userId: string;
 
   @ApiProperty()

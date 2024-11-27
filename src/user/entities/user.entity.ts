@@ -2,6 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import * as bcrypt from 'bcrypt';
 import { Exclude } from 'class-transformer';
 import { Column, Entity } from 'typeorm';
+import { Unique } from 'typeorm/browser';
 import { BaseEntity } from '../../common/entities/base.entity';
 
 @Entity({ name: 'users' })

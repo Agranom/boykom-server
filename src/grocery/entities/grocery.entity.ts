@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsEnum, IsString, MaxLength } from 'class-validator';
-import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
+import { Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
 import { BaseEntity } from '../../common/entities/base.entity';
 import { User } from '../../user/entities/user.entity';
 import { eGroceryItemPriority } from '../enums/grocery-item-priority.enum';
@@ -13,6 +13,7 @@ export class Grocery extends BaseEntity {
   @JoinColumn({ name: 'user_id' })
   user: User;
 
+  @Index()
   @Column({ select: false, nullable: false })
   userId: string;
 

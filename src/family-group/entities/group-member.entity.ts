@@ -14,13 +14,16 @@ import { User } from '../../user/entities/user.entity';
 import { FamilyGroup } from './family-group.entity';
 
 @Entity({ name: 'group_members' })
-@Unique('UQ_userId', ['userId'])
-@Index(['groupId'], { unique: true, where: '"is_owner" = true' })
+@Index('IDX_GROUP_MEMBERS_group_id_WHERE_is_owner_TRUE', ['groupId'], {
+  unique: true,
+  where: '"is_owner" = true',
+})
 export class GroupMember extends BaseEntity {
   @ManyToOne(() => FamilyGroup, (group) => group.members, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'group_id' })
   group?: FamilyGroup;
 
+  @Index()
   @Column({ select: false })
   groupId: string;
 
@@ -29,7 +32,7 @@ export class GroupMember extends BaseEntity {
   @JoinColumn({ name: 'user_id' })
   user: User;
 
-  @Column({ select: false })
+  @Column({ select: false, unique: true })
   userId: string;
 
   @ApiProperty()

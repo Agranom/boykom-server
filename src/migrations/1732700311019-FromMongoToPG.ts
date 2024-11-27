@@ -1,7 +1,7 @@
 import { MongoClient } from 'mongodb';
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class FromMongoToPG1731170208993 implements MigrationInterface {
+export class FromMongoToPG1732700311019 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
     const mongoClient = new MongoClient(process.env.DB_URL as string);
 
@@ -50,29 +50,53 @@ export class FromMongoToPG1731170208993 implements MigrationInterface {
       SELECT id AS user_id, username FROM users
     `);
 
-    const groupMembers = familyGroups.reduce((acc: Record<string, string[]>, group) => {
-      const ownerName = allUsers.find((u) => u._id.toString() === group.ownerId)?.username;
-      const groupId = groupWithOwner.find(({ username }) => username === ownerName)?.group_id;
+    const groupMembers = familyGroups.reduce(
+      (
+        acc: Record<
+          string,
+          {
+            members: { userId: string; isAccepted: boolean }[];
+            ownerId: string;
+          }
+        >,
+        group,
+      ) => {
+        const ownerName = allUsers.find((u) => u._id.toString() === group.ownerId)?.username;
+        const groupId = groupWithOwner.find(({ username }) => username === ownerName)?.group_id;
 
-      if (!groupId) {
-        return acc;
-      }
+        if (!groupId) {
+          return acc;
+        }
 
-      return {
-        ...acc,
-        [groupId]: allUsers
-          .filter((u) => group.members.some((m: any) => m.userId === u._id.toString()))
-          .map((u) => users.find(({ username }) => username === u.username)?.user_id),
-      };
-    }, {});
+        return {
+          ...acc,
+          [groupId]: {
+            ownerId: users.find(({ username }) => username === ownerName)?.user_id,
+            members: allUsers
+              .filter((u) => group.members.some((m: any) => m.userId === u._id.toString()))
+              .map((u) => ({
+                userId: users.find(({ username }) => username === u.username)?.user_id,
+                isAccepted: !!group.members.find(
+                  (m: { userId: string; isAccepted: boolean }) => m.userId === u._id.toString(),
+                )?.isAccepted,
+              })),
+          },
+        };
+      },
+      {},
+    );
 
-    for (const [groupId, memberIds] of Object.entries(groupMembers)) {
-      for (const memberId of memberIds) {
+    for (const [groupId, { members, ownerId }] of Object.entries(groupMembers)) {
+      for (const { userId, isAccepted } of members) {
         await queryRunner.query(`
-              INSERT INTO "group_members" (id, group_id, user_id)
-              VALUES (uuid_generate_v4(), '${groupId}', '${memberId}')
+              INSERT INTO "group_members" (id, group_id, user_id, is_accepted, is_owner)
+              VALUES (uuid_generate_v4(), '${groupId}', '${userId}', ${isAccepted}, false)
         `);
       }
+      await queryRunner.query(`
+              INSERT INTO "group_members" (id, group_id, user_id, is_accepted, is_owner)
+              VALUES (uuid_generate_v4(), '${groupId}', '${ownerId}', true, true)
+        `);
     }
     ///
 

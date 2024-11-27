@@ -1,5 +1,5 @@
 import { DataSource, DataSourceOptions } from 'typeorm';
-import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
+import { DatabaseNamingStrategy } from '../common/db/database-naming-strategy';
 import { ConfigHelper } from './config.helper';
 import * as dotenv from 'dotenv';
 
@@ -15,10 +15,12 @@ export const typeOrmConfig = (): DataSourceOptions => ({
   username: ConfigHelper.getOrThrow('POSTGRES_USER'),
   password: process.env.POSTGRES_PASSWORD || '',
   database: ConfigHelper.getOrThrow('POSTGRES_DATABASE'),
-  namingStrategy: new SnakeNamingStrategy(),
+  namingStrategy: new DatabaseNamingStrategy(),
   synchronize: false,
   entities: [`${entryDir}/**/*.entity{.ts,.js}`],
   migrations: [`${entryDir}/migrations/*{.ts,.js}`],
+  // TODO: Change after releasing
+  poolSize: 5,
 });
 
 export const connectionSource = new DataSource(typeOrmConfig());
