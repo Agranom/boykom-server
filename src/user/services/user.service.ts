@@ -1,32 +1,61 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import * as mongoose from 'mongoose';
-import { Model } from 'mongoose';
+import { plainToInstance } from 'class-transformer';
+import { Not } from 'typeorm';
 import { CreateUserDto } from '../dto/create-user.dto';
-import { User, UserDocument } from '../models/user.schema';
+import { UserWithoutPasswordDto } from '../dto/user-without-password.dto';
+import { User } from '../entities/user.entity';
+import { UserRepository } from './user.repository';
 
 @Injectable()
 export class UserService {
-  constructor(@InjectModel('user') private userModel: Model<UserDocument>) {
-  }
+  constructor(private repository: UserRepository) {}
 
   async createUser(createUserDto: CreateUserDto): Promise<void> {
-    await new this.userModel(createUserDto).save();
+    createUserDto.password = await User.hashPassword(createUserDto.password);
+
+    await this.repository.createOne(createUserDto);
   }
 
-  async getUser(username: string | null, userId?: string): Promise<UserDocument> {
-    const query = userId ? { _id: new mongoose.Types.ObjectId(userId) } : { username };
-    const user: UserDocument | null = await this.userModel.findOne(query);
-    if (!user) {
-      throw new NotFoundException('User not found');
+  async getUserById(id: string): Promise<User> {
+    const result = await this.repository.findById(id);
+
+    if (!result) {
+      throw new NotFoundException(`User with ID ${id} not found`);
     }
-    return user;
+
+    return result;
   }
 
-  async getAll(excludeMe: boolean, userId: string): Promise<User[]> {
-    const query = excludeMe ? { _id: { $nin: [userId] } } : {};
-    const users: UserDocument[] = await this.userModel.find(query);
-    return users.map(u => u.toJSON());
+  async getUserByUsername(
+    username: string,
+    { includePassword } = { includePassword: false },
+  ): Promise<User> {
+    let result: User | null;
+
+    if (includePassword) {
+      result = await this.repository.getUserWithPassword(username);
+    } else {
+      result = await this.repository.findOne({
+        where: { username },
+      });
+    }
+
+    if (!result) {
+      throw new NotFoundException(`User with username ${username} not found`);
+    }
+
+    return result;
   }
 
+  async getAll(excludeMe: boolean, userId: string): Promise<UserWithoutPasswordDto[]> {
+    let users: User[];
+
+    if (excludeMe) {
+      users = await this.repository.findBy({ id: Not(userId) });
+    } else {
+      users = await this.repository.find();
+    }
+
+    return users.map((u) => plainToInstance(UserWithoutPasswordDto, u));
+  }
 }

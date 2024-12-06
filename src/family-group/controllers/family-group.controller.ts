@@ -1,50 +1,73 @@
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Post, Put, Req } from '@nestjs/common';
-import { IStatusResponse } from '../../common/models/status-response.interface';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Post,
+  Req,
+} from '@nestjs/common';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { FindByIdDto } from '../../common/dtos/find-by-id.dto';
 import { IRequest } from '../../common/models/request.interface';
-import { ObjectIdPipe } from '../../common/pipes/object-id.pipe';
+import { IStatusResponse } from '../../common/models/status-response.interface';
+import { AddGroupMemberDto } from '../dto/add-group-member.dto';
 import { CreateGroupDto } from '../dto/create-group.dto';
-import { UpdateGroupDto } from '../dto/update-group.dto';
-import { FamilyGroup } from '../models/family-group.schema';
+import { DeleteMemberParamsDto } from '../dto/delete-member-params.dto';
+import { FamilyGroup } from '../entities/family-group.entity';
+import { GroupMember } from '../entities/group-member.entity';
 import { FamilyGroupService } from '../services/family-group.service';
 
 @Controller('family-groups')
+@ApiTags('family-groups')
+@ApiBearerAuth()
 export class FamilyGroupController {
-  constructor(private familyGroupService: FamilyGroupService) {
-  }
+  constructor(private familyGroupService: FamilyGroupService) {}
 
   @Post()
   @HttpCode(HttpStatus.OK)
-  async createGroup(@Body() createGroupDto: CreateGroupDto, @Req() req: IRequest): Promise<IStatusResponse> {
+  async createGroup(
+    @Body() createGroupDto: CreateGroupDto,
+    @Req() req: IRequest,
+  ): Promise<IStatusResponse> {
     return this.familyGroupService.create(createGroupDto, req.user.userId);
   }
 
-  @Get(':userId')
+  @Get('/my-group')
   @HttpCode(HttpStatus.OK)
-  async getByOwnerId(@Param('userId') userId: string): Promise<FamilyGroup | null> {
-    return this.familyGroupService.getByUserId(userId);
+  async getByOwnerId(@Req() req: IRequest): Promise<FamilyGroup | null> {
+    return this.familyGroupService.getWithMembersByUserId(req.user.userId);
   }
 
-  @Put(':groupId')
+  @Post(':id/member')
   @HttpCode(HttpStatus.OK)
-  async addMembersToGroup(@Body() updateGroupDto: UpdateGroupDto, @Param('groupId', ObjectIdPipe) groupId: string): Promise<FamilyGroup | IStatusResponse> {
-    return this.familyGroupService.addMembers(groupId, updateGroupDto);
+  async addMembersToGroup(
+    @Body() dto: AddGroupMemberDto,
+    @Param() { id }: FindByIdDto,
+    @Req() req: IRequest,
+  ): Promise<GroupMember | IStatusResponse> {
+    return this.familyGroupService.addMember(id, dto, req.user.userId);
   }
 
   @Delete(':id')
   @HttpCode(HttpStatus.OK)
-  async deleteGroupById(@Param('id', ObjectIdPipe) id: string): Promise<{ id: string }> {
+  async deleteGroupById(@Param() { id }: FindByIdDto): Promise<{ id: string }> {
     return this.familyGroupService.deleteGroupById(id);
   }
 
-  @Post(':groupId/accept-membership')
-  @HttpCode(HttpStatus.OK)
-  async acceptMembership(@Param('groupId', ObjectIdPipe) groupId: string, @Req() req: IRequest): Promise<FamilyGroup> {
-    return this.familyGroupService.acceptMembership(groupId, req.user);
+  @Post(':id/accept-membership')
+  @HttpCode(HttpStatus.CREATED)
+  async acceptMembership(@Param() { id }: FindByIdDto, @Req() req: IRequest): Promise<void> {
+    return this.familyGroupService.acceptMembership(id, req.user);
   }
 
-  @Delete(':groupId/:memberId')
+  @Delete(':id/:memberId')
   @HttpCode(HttpStatus.OK)
-  async removeMemberFromGroup(@Param('groupId', ObjectIdPipe) groupId: string, @Param('memberId') memberId: string): Promise<{memberId: string}> {
-    return this.familyGroupService.removeMember(groupId, memberId);
+  async removeMemberFromGroup(
+    @Param() { id, memberId }: DeleteMemberParamsDto,
+  ): Promise<{ memberId: string }> {
+    return this.familyGroupService.removeMember(id, memberId);
   }
 }

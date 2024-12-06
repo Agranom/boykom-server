@@ -1,20 +1,18 @@
 import { Module } from '@nestjs/common';
-import { MongooseModule } from '@nestjs/mongoose';
-import { SubscriptionModule } from '../notification/subscription.module';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { SubscriptionModule } from '../subsciption/subscription.module';
 import { UserModule } from '../user/user.module';
 import { FamilyGroupController } from './controllers/family-group.controller';
-import { FamilyGroupSchema } from './models/family-group.schema';
+import { FamilyGroup } from './entities/family-group.entity';
+import { GroupMember } from './entities/group-member.entity';
+import { FamilyGroupRepository } from './services/family-group.repository';
 import { FamilyGroupService } from './services/family-group.service';
+import { GroupMemberRepository } from './services/group-member.repository';
 
 @Module({
-  imports: [
-    MongooseModule.forFeature([{ name: 'familyGroup', schema: FamilyGroupSchema }]),
-    SubscriptionModule,
-    UserModule,
-  ],
+  imports: [TypeOrmModule.forFeature([FamilyGroup, GroupMember]), SubscriptionModule, UserModule],
   controllers: [FamilyGroupController],
-  providers: [FamilyGroupService],
+  providers: [FamilyGroupService, FamilyGroupRepository, GroupMemberRepository],
   exports: [FamilyGroupService],
 })
-export class FamilyGroupModule {
-}
+export class FamilyGroupModule {}

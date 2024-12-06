@@ -1,4 +1,3 @@
 import { CreateGroupDto } from './create-group.dto';
 
-export class UpdateGroupDto extends CreateGroupDto{
-}
+export class UpdateGroupDto extends CreateGroupDto {}
