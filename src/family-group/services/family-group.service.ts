@@ -6,8 +6,10 @@ import {
 } from '@nestjs/common';
 import { DataSource, Not } from 'typeorm';
 import { staticText } from '../../common/const/static-text';
+import { INotificationPayload } from '../../common/models/notification-payload.interface';
 import { IUserRequestPayload } from '../../common/models/request.interface';
 import { IStatusResponse } from '../../common/models/status-response.interface';
+import { eSocketEvent } from '../../providers/socket/enums/socket-event.enum';
 import { SubscriptionService } from '../../subsciption/services/subscription.service';
 import { User } from '../../user/entities/user.entity';
 import { UserService } from '../../user/services/user.service';
@@ -27,6 +29,10 @@ export class FamilyGroupService {
     private userService: UserService,
     private dataSource: DataSource,
   ) {}
+
+  static getActiveGroupMembers(familyGroup: FamilyGroup): GroupMember[] {
+    return familyGroup.members.filter((m) => m.isAccepted);
+  }
 
   async create({ username }: CreateGroupDto, ownerId: string): Promise<IStatusResponse> {
     const { id: userMemberId } = await this.userService.getUserByUsername(username);
@@ -169,6 +175,41 @@ export class FamilyGroupService {
       title: staticText.familyGroup.acceptMembershipPayload.title,
       bodyFn: staticText.familyGroup.acceptMembershipPayload.body,
     });
+  }
+
+  async getGroupIdByUser(userId: string): Promise<string | undefined> {
+    const groupMember = await this.memberRepository.findOne({
+      where: { userId, isAccepted: true },
+      select: ['groupId'],
+    });
+
+    return groupMember?.groupId;
+  }
+
+  /**
+   * Returns a member and it's siblings
+   * @param userId
+   */
+  async getMemberWithSiblingsByUserId(userId: string): Promise<{
+    primaryMember: GroupMember;
+    siblings: GroupMember[];
+  } | null> {
+    const familyGroup = await this.getWithMembersByUserId(userId);
+
+    if (familyGroup) {
+      const activeMember = familyGroup.members.find((m) => m.user.id === userId && m.isAccepted);
+
+      if (activeMember) {
+        const allMembers = FamilyGroupService.getActiveGroupMembers(familyGroup);
+
+        return {
+          primaryMember: activeMember,
+          siblings: allMembers.filter((m) => m.user.id !== userId),
+        };
+      }
+    }
+
+    return null;
   }
 
   private async notifyGroupMembers(

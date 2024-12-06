@@ -1,6 +1,8 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { FamilyGroupModule } from '../family-group/family-group.module';
+import { LoggerModule } from '../providers/logger/logger.module';
+import { SocketModule } from '../providers/socket/socket.module';
 import { SubscriptionModule } from '../subsciption/subscription.module';
 import { UserModule } from '../user/user.module';
 import { GroceryController } from './controllers/grocery.controller';
@@ -9,7 +11,14 @@ import { GroceryRepository } from './services/grocery.repository';
 import { GroceryService } from './services/grocery.service';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Grocery]), FamilyGroupModule, SubscriptionModule, UserModule],
+  imports: [
+    TypeOrmModule.forFeature([Grocery]),
+    FamilyGroupModule,
+    SubscriptionModule,
+    UserModule,
+    SocketModule,
+    LoggerModule,
+  ],
   providers: [GroceryService, GroceryRepository],
   controllers: [GroceryController],
 })
