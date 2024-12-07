@@ -2,10 +2,32 @@ import { DeepPartial, DeleteResult, InsertResult, Repository } from 'typeorm';
 import { ObjectLiteral } from 'typeorm/common/ObjectLiteral';
 import { FindManyOptions } from 'typeorm/find-options/FindManyOptions';
 import { FindOneOptions } from 'typeorm/find-options/FindOneOptions';
+import {
+  FindOptionsSelect,
+  FindOptionsSelectByString,
+} from 'typeorm/find-options/FindOptionsSelect';
 import { FindOptionsWhere } from 'typeorm/find-options/FindOptionsWhere';
 import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
 import { UpsertOptions } from 'typeorm/repository/UpsertOptions';
 import { BaseEntity } from '../entities/base.entity';
+
+function snakeToCamelCase(obj: Record<string, any>): Record<string, any> {
+  if (!obj || typeof obj !== 'object') {
+    return obj; // Return the value directly if it's not an object
+  }
+
+  if (Array.isArray(obj)) {
+    return obj.map(snakeToCamelCase); // Recursively handle arrays
+  }
+
+  const toCamel = (str: string) => str.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
+
+  return Object.keys(obj).reduce((acc, key) => {
+    const camelKey = toCamel(key); // Convert key to camelCase
+    acc[camelKey] = snakeToCamelCase(obj[key]); // Recursively convert nested objects
+    return acc;
+  }, {} as Record<string, any>);
+}
 
 export abstract class EntityRepository<T extends BaseEntity> {
   constructor(protected readonly repository: Repository<T>) {}
@@ -32,16 +54,33 @@ export abstract class EntityRepository<T extends BaseEntity> {
     return this.repository.findBy(query);
   }
 
-  async updateOne(query: ObjectLiteral, data: QueryDeepPartialEntity<T>): Promise<T | null> {
+  async findOneAndUpdate(
+    query: ObjectLiteral,
+    data: QueryDeepPartialEntity<T>,
+    returnColumns?: (keyof T)[],
+  ): Promise<T | null> {
+    const isReturning = !!returnColumns?.length;
+    const returning: string[] = isReturning ? (returnColumns as string[]) : ['id'];
+
     const result = await this.repository
       .createQueryBuilder()
       .update()
       .set(data)
       .where(query)
-      .returning('*')
+      .returning(returning)
       .execute();
 
-    return result.raw[0];
+    const affectedEntity = result.raw[0];
+
+    if (!result.affected && !affectedEntity) {
+      return null;
+    }
+
+    if (isReturning) {
+      return snakeToCamelCase(affectedEntity) as T;
+    }
+
+    return affectedEntity;
   }
 
   async upsertOne(

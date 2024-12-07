@@ -6,12 +6,12 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { ScheduleModule } from '@nestjs/schedule';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { DataSourceOptions } from 'typeorm';
-import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 import { AuthModule } from './auth/auth.module';
 import { AuthGuard } from './auth/guards/auth.guard';
 import { appConfig } from './config/app.config';
-import { PgConfig } from './config/pg.config';
 import { GroceryModule } from './grocery/grocery.module';
+import { LoggerModule } from './providers/logger/logger.module';
+import { SocketModule } from './providers/socket/socket.module';
 import { SubscriptionModule } from './subsciption/subscription.module';
 import { UserModule } from './user/user.module';
 import { FamilyGroupModule } from './family-group/family-group.module';
@@ -40,6 +40,8 @@ import { FamilyGroupModule } from './family-group/family-group.module';
     UserModule,
     FamilyGroupModule,
     SubscriptionModule,
+    SocketModule,
+    LoggerModule,
   ],
   controllers: [],
   providers: [{ provide: APP_GUARD, useClass: AuthGuard }],
