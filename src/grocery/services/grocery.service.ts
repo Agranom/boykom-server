@@ -12,6 +12,7 @@ import { SubscriptionService } from '../../subsciption/services/subscription.ser
 import { UpsertGroceryDto } from '../dto/upsert-grocery.dto';
 import { Grocery } from '../entities/grocery.entity';
 import { eGroceryItemStatus } from '../enums/grocery-item-status.enum';
+import { GroceryCategoriesService } from './grocery-categories.service';
 import { GroceryRepository } from './grocery.repository';
 
 @Injectable()
@@ -22,12 +23,14 @@ export class GroceryService {
     private subscriptionService: SubscriptionService,
     private socketService: SocketService,
     private logger: AppLogger,
+    private groceryCategoryService: GroceryCategoriesService,
   ) {
     this.logger.setContext(GroceryService.name);
   }
 
   async createAndNotify(groceryDto: UpsertGroceryDto, userId: string): Promise<Grocery> {
-    const newItem = await this.repository.createOne({ ...groceryDto, userId });
+    const category = await this.groceryCategoryService.getCategory(groceryDto.name);
+    const newItem = await this.repository.createOne({ ...groceryDto, userId, category });
 
     this.notifyOnCreate(userId, newItem.name);
 

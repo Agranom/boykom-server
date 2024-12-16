@@ -1,10 +1,12 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEnum, IsString, MaxLength } from 'class-validator';
+import { Exclude } from 'class-transformer';
+import { IsEnum, IsOptional, IsString, MaxLength } from 'class-validator';
 import { Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
 import { BaseEntity } from '../../common/entities/base.entity';
 import { User } from '../../user/entities/user.entity';
 import { eGroceryItemPriority } from '../enums/grocery-item-priority.enum';
 import { eGroceryItemStatus } from '../enums/grocery-item-status.enum';
+import { eGroceryCategory } from '../interfaces/grocery-category.interface';
 
 @Entity({ name: 'groceries' })
 export class Grocery extends BaseEntity {
@@ -25,11 +27,17 @@ export class Grocery extends BaseEntity {
 
   @ApiProperty()
   @IsEnum(eGroceryItemStatus)
+  @IsOptional()
   @Column({ enum: eGroceryItemStatus, type: 'enum', default: eGroceryItemStatus.Undone })
   status: eGroceryItemStatus;
 
   @ApiProperty()
   @IsEnum(eGroceryItemPriority)
-  @Column({ enum: eGroceryItemPriority, default: eGroceryItemPriority.Major })
+  @Column({ enum: eGroceryItemPriority, type: 'enum', default: eGroceryItemPriority.Major })
   priority: eGroceryItemPriority;
+
+  @Exclude()
+  @IsEnum(eGroceryCategory)
+  @Column({ enum: eGroceryCategory, type: 'enum', default: eGroceryCategory.Unknown })
+  category: eGroceryCategory;
 }
