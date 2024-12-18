@@ -3,6 +3,7 @@ import { ConfigHelper } from './config.helper';
 import { pgConfig, PgConfig } from './pg.config';
 import { typeOrmConfig } from './type-orm.config';
 import { webPushConfig, WebPushConfig } from './web-push.config';
+import { GroceryStorageConfig, groceryStorageConfig } from './grocery-storage.config';
 
 export interface AppConfig {
   origin: string;
@@ -11,6 +12,7 @@ export interface AppConfig {
   pgConfig: PgConfig;
   typeOrmConfig: DataSourceOptions;
   port: number;
+  groceryStorageConfig: GroceryStorageConfig;
 }
 
 export const appConfig = (): AppConfig => ({
@@ -20,4 +22,5 @@ export const appConfig = (): AppConfig => ({
   pgConfig: pgConfig(),
   typeOrmConfig: typeOrmConfig(),
   port: Number(process.env.PORT) || 4000,
+  groceryStorageConfig: groceryStorageConfig(),
 });

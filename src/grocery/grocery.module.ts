@@ -7,6 +7,8 @@ import { SubscriptionModule } from '../subsciption/subscription.module';
 import { UserModule } from '../user/user.module';
 import { GroceryController } from './controllers/grocery.controller';
 import { Grocery } from './entities/grocery.entity';
+import { GroceryStorageService } from './services/grocery-storage.service';
+import { GroceryCategoriesService } from './services/grocery-categories.service';
 import { GroceryRepository } from './services/grocery.repository';
 import { GroceryService } from './services/grocery.service';
 
@@ -19,7 +21,7 @@ import { GroceryService } from './services/grocery.service';
     SocketModule,
     LoggerModule,
   ],
-  providers: [GroceryService, GroceryRepository],
+  providers: [GroceryService, GroceryRepository, GroceryCategoriesService, GroceryStorageService],
   controllers: [GroceryController],
 })
 export class GroceryModule {}
