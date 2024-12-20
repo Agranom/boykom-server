@@ -2,10 +2,6 @@ import { DeepPartial, DeleteResult, InsertResult, Repository } from 'typeorm';
 import { ObjectLiteral } from 'typeorm/common/ObjectLiteral';
 import { FindManyOptions } from 'typeorm/find-options/FindManyOptions';
 import { FindOneOptions } from 'typeorm/find-options/FindOneOptions';
-import {
-  FindOptionsSelect,
-  FindOptionsSelectByString,
-} from 'typeorm/find-options/FindOptionsSelect';
 import { FindOptionsWhere } from 'typeorm/find-options/FindOptionsWhere';
 import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
 import { UpsertOptions } from 'typeorm/repository/UpsertOptions';
@@ -31,6 +27,10 @@ function snakeToCamelCase(obj: Record<string, any>): Record<string, any> {
 
 export abstract class EntityRepository<T extends BaseEntity> {
   constructor(protected readonly repository: Repository<T>) {}
+
+  async save(entity: T): Promise<T> {
+    return this.repository.save(entity);
+  }
 
   async createOne(data: DeepPartial<T>): Promise<T> {
     const entity = this.repository.create(data) as T;

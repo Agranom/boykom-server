@@ -6,16 +6,17 @@ import {
   HttpCode,
   HttpStatus,
   Param,
+  Patch,
   Post,
-  Put,
   Req,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { FindByIdDto } from '../../common/dtos/find-by-id.dto';
 import { IRequest } from '../../common/models/request.interface';
-import { UpsertGroceryDto } from '../dto/upsert-grocery.dto';
+import { PatchGroceryDto } from '../dto/patch-grocery.dto';
 import { Grocery } from '../entities/grocery.entity';
 import { GroceryService } from '../services/grocery.service';
+import { CreateGroceryDto } from '../dto/create-grocery.dto';
 
 @Controller('groceries')
 @ApiBearerAuth()
@@ -29,14 +30,14 @@ export class GroceryController {
   }
 
   @Post()
-  async create(@Body() createDto: UpsertGroceryDto, @Req() req: IRequest) {
+  async create(@Body() createDto: CreateGroceryDto, @Req() req: IRequest) {
     return this.groceryService.createAndNotify(createDto, req.user.userId);
   }
 
-  @Put(':id')
+  @Patch(':id')
   async updateById(
     @Param() { id }: FindByIdDto,
-    @Body() dto: UpsertGroceryDto,
+    @Body() dto: PatchGroceryDto,
     @Req() req: IRequest,
   ): Promise<Grocery> {
     return this.groceryService.updateById(id, dto, req.user.userId);
