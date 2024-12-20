@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Exclude } from 'class-transformer';
-import { IsEnum, IsOptional, IsString, MaxLength } from 'class-validator';
-import { Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
+import { IsEnum, IsInt, IsOptional, IsString, MaxLength } from 'class-validator';
+import { Column, Entity, Index, JoinColumn, ManyToOne, VersionColumn } from 'typeorm';
 import { BaseEntity } from '../../common/entities/base.entity';
 import { User } from '../../user/entities/user.entity';
 import { eGroceryItemPriority } from '../enums/grocery-item-priority.enum';
@@ -33,6 +33,7 @@ export class Grocery extends BaseEntity {
 
   @ApiProperty()
   @IsEnum(eGroceryItemPriority)
+  @IsOptional()
   @Column({ enum: eGroceryItemPriority, type: 'enum', default: eGroceryItemPriority.Major })
   priority: eGroceryItemPriority;
 
@@ -40,4 +41,9 @@ export class Grocery extends BaseEntity {
   @IsEnum(eGroceryCategory)
   @Column({ enum: eGroceryCategory, type: 'enum', default: eGroceryCategory.Unknown })
   category: eGroceryCategory;
+
+  @ApiProperty()
+  @IsInt()
+  @VersionColumn({ default: 1 })
+  version: number;
 }

@@ -1,6 +1,6 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { In } from 'typeorm';
+import { In, OptimisticLockVersionMismatchError } from 'typeorm';
 import { FindOptionsWhere } from 'typeorm/find-options/FindOptionsWhere';
 import { staticText } from '../../common/const/static-text';
 import { INotificationPayload } from '../../common/models/notification-payload.interface';
@@ -9,11 +9,12 @@ import { AppLogger } from '../../providers/logger/logger.service';
 import { eSocketEvent } from '../../providers/socket/enums/socket-event.enum';
 import { SocketService } from '../../providers/socket/socket.service';
 import { SubscriptionService } from '../../subsciption/services/subscription.service';
-import { UpsertGroceryDto } from '../dto/upsert-grocery.dto';
+import { PatchGroceryDto } from '../dto/patch-grocery.dto';
 import { Grocery } from '../entities/grocery.entity';
 import { eGroceryItemStatus } from '../enums/grocery-item-status.enum';
 import { GroceryCategoriesService } from './grocery-categories.service';
 import { GroceryRepository } from './grocery.repository';
+import { CreateGroceryDto } from '../dto/create-grocery.dto';
 
 @Injectable()
 export class GroceryService {
@@ -28,7 +29,7 @@ export class GroceryService {
     this.logger.setContext(GroceryService.name);
   }
 
-  async createAndNotify(groceryDto: UpsertGroceryDto, userId: string): Promise<Grocery> {
+  async createAndNotify(groceryDto: CreateGroceryDto, userId: string): Promise<Grocery> {
     const category = await this.groceryCategoryService.getCategory(groceryDto.name);
     const newItem = await this.repository.createOne({ ...groceryDto, userId, category });
 
@@ -55,26 +56,44 @@ export class GroceryService {
     return this.repository.find({ where: dbQuery, order: { createdAt: 1 } });
   }
 
-  async updateById(id: string, groceryDto: UpsertGroceryDto, userId: string): Promise<Grocery> {
-    const result = await this.repository.findOneAndUpdate({ id }, groceryDto);
+  async updateById(
+    id: string,
+    { version, ...dto }: PatchGroceryDto,
+    userId: string,
+  ): Promise<Grocery> {
+    try {
+      const grocery = await this.repository.findOne({
+        where: { id },
+        lock: { mode: 'optimistic', version },
+        select: ['id', 'version'],
+      });
 
-    if (!result) {
-      throw new NotFoundException();
+      if (!grocery) {
+        throw new NotFoundException();
+      }
+
+      const newGrocery = await this.repository.save({ ...grocery, ...dto });
+
+      this.onGroceryChange(userId);
+
+      return newGrocery;
+    } catch (e) {
+      if (e instanceof OptimisticLockVersionMismatchError) {
+        // TODO: [Translate] error
+        throw new ConflictException(
+          'The document has been updated by someone else. Please reload and try again.',
+        );
+      }
+      throw e;
     }
-
-    this.onGroceryChange(userId);
-
-    return result;
   }
 
   async deleteById(id: string, userId: string): Promise<void> {
     const deleteResult = await this.repository.deleteById(id);
 
-    if (!deleteResult.affected) {
-      throw new NotFoundException();
+    if (deleteResult.affected) {
+      this.onGroceryChange(userId);
     }
-
-    this.onGroceryChange(userId);
   }
 
   @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
