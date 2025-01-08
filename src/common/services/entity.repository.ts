@@ -6,6 +6,14 @@ import { FindOptionsWhere } from 'typeorm/find-options/FindOptionsWhere';
 import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
 import { UpsertOptions } from 'typeorm/repository/UpsertOptions';
 import { BaseEntity } from '../entities/base.entity';
+import {
+  FindOptionsSelect,
+  FindOptionsSelectByString,
+} from 'typeorm/find-options/FindOptionsSelect';
+import {
+  FindOptionsRelationByString,
+  FindOptionsRelations,
+} from 'typeorm/find-options/FindOptionsRelations';
 
 function snakeToCamelCase(obj: Record<string, any>): Record<string, any> {
   if (!obj || typeof obj !== 'object') {
@@ -42,8 +50,11 @@ export abstract class EntityRepository<T extends BaseEntity> {
     return this.repository.find(options);
   }
 
-  async findById(id: string): Promise<T | null> {
-    return this.repository.findOne({ where: { id } as FindOptionsWhere<T> });
+  async findById(
+    id: string,
+    options?: { select?: FindOptionsSelect<T>; relations?: FindOptionsRelations<T> },
+  ): Promise<T | null> {
+    return this.repository.findOne({ where: { id } as FindOptionsWhere<T>, ...(options || {}) });
   }
 
   async findOne(options: FindOneOptions<T>): Promise<T | null> {
@@ -94,7 +105,7 @@ export abstract class EntityRepository<T extends BaseEntity> {
     return this.repository.delete(id);
   }
 
-  async deleteMany(query: FindOptionsWhere<T>): Promise<DeleteResult> {
+  async delete(query: FindOptionsWhere<T>): Promise<DeleteResult> {
     return this.repository.delete(query);
   }
 

@@ -14,6 +14,7 @@ import { SocketModule } from './providers/socket/socket.module';
 import { SubscriptionModule } from './subsciption/subscription.module';
 import { UserModule } from './user/user.module';
 import { FamilyGroupModule } from './family-group/family-group.module';
+import { RecipeModule } from './recipe/recipe.module';
 
 @Module({
   imports: [
@@ -40,6 +41,7 @@ import { FamilyGroupModule } from './family-group/family-group.module';
     SubscriptionModule,
     SocketModule,
     LoggerModule,
+    RecipeModule,
   ],
   controllers: [],
   providers: [{ provide: APP_GUARD, useClass: AuthGuard }],
