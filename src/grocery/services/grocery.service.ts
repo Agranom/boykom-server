@@ -98,7 +98,7 @@ export class GroceryService {
 
   @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
   async removeCompleted(): Promise<void> {
-    await this.repository.deleteMany({ status: eGroceryItemStatus.Done });
+    await this.repository.delete({ status: eGroceryItemStatus.Done });
   }
 
   private async onGroceryChange(userId: string) {
