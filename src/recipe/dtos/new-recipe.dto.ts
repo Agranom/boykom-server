@@ -4,7 +4,7 @@ import { Recipe } from '../entities/recipe.entity';
 const keys = [
   'title',
   'description',
-  'cookingTime',
+  'portionsCount',
   'cookingMethod',
   'ingredients',
   'imageUrl',
