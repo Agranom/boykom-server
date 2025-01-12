@@ -50,8 +50,8 @@ export class Recipe extends BaseEntity {
   @ApiProperty()
   @IsInt()
   @IsOptional()
-  @Column({ type: 'float', nullable: true })
-  cookingTime?: number;
+  @Column({ type: 'integer', nullable: true })
+  portionsCount?: number;
 
   @ApiProperty({ isArray: true, type: RecipeIngredient })
   @ArrayNotEmpty()
