@@ -11,6 +11,7 @@ import { GroceryStorageService } from './services/grocery-storage.service';
 import { GroceryCategoriesService } from './services/grocery-categories.service';
 import { GroceryRepository } from './services/grocery.repository';
 import { GroceryService } from './services/grocery.service';
+import { GcpModule } from '../providers/gcp/gcp.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { GroceryService } from './services/grocery.service';
     UserModule,
     SocketModule,
     LoggerModule,
+    GcpModule,
   ],
   providers: [GroceryService, GroceryRepository, GroceryCategoriesService, GroceryStorageService],
   controllers: [GroceryController],
