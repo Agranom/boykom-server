@@ -7,10 +7,19 @@ import { AuthModule } from '../auth/auth.module';
 import { RecipeRepository } from './services/recipe.repository';
 import { RecipeService } from './services/recipe.service';
 import { RecipeController } from './controllers/recipe.controller';
+import { RecipeGeneratorService } from './services/recipe-generator.service';
+import { GcpModule } from '../providers/gcp/gcp.module';
+import { SocketModule } from '../providers/socket/socket.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Recipe, RecipeIngredient]), LoggerModule, AuthModule],
+  imports: [
+    TypeOrmModule.forFeature([Recipe, RecipeIngredient]),
+    LoggerModule,
+    AuthModule,
+    GcpModule,
+    SocketModule,
+  ],
   controllers: [RecipeController],
-  providers: [RecipeRepository, RecipeService],
+  providers: [RecipeRepository, RecipeService, RecipeGeneratorService],
 })
 export class RecipeModule {}

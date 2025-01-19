@@ -26,5 +26,5 @@ export class RecipeIngredient {
   @IsString()
   @MaxLength(50)
   @Column({ type: 'varchar', length: 50 })
-  amount: number;
+  amount: string;
 }

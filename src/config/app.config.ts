@@ -4,6 +4,8 @@ import { pgConfig, PgConfig } from './pg.config';
 import { typeOrmConfig } from './type-orm.config';
 import { webPushConfig, WebPushConfig } from './web-push.config';
 import { GroceryStorageConfig, groceryStorageConfig } from './grocery-storage.config';
+import { gcpConfig, GcpConfig } from './gcp.config';
+import { recipeGeneratorConfig, RecipeGeneratorConfig } from './recipe-generator.config';
 
 export interface AppConfig {
   origin: string;
@@ -13,6 +15,8 @@ export interface AppConfig {
   typeOrmConfig: DataSourceOptions;
   port: number;
   groceryStorageConfig: GroceryStorageConfig;
+  gcpConfig: GcpConfig;
+  recipeGeneratorConfig: RecipeGeneratorConfig;
 }
 
 export const appConfig = (): AppConfig => ({
@@ -23,4 +27,6 @@ export const appConfig = (): AppConfig => ({
   typeOrmConfig: typeOrmConfig(),
   port: Number(process.env.PORT) || 4000,
   groceryStorageConfig: groceryStorageConfig(),
+  gcpConfig: gcpConfig(),
+  recipeGeneratorConfig: recipeGeneratorConfig(),
 });

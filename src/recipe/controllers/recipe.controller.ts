@@ -20,6 +20,7 @@ import { NewRecipeDto } from '../dtos/new-recipe.dto';
 import { UserRecipeDto } from '../dtos/user-recipe.dto';
 import { Recipe } from '../entities/recipe.entity';
 import { FindByIdDto } from '../../common/dtos/find-by-id.dto';
+import { GenerateRecipeRequestDto } from '../dtos/generated-recipe.dto';
 
 @Controller('recipes')
 @ApiTags('recipes')
@@ -64,5 +65,15 @@ export class RecipeController {
   @ApiResponse({ status: HttpStatus.NO_CONTENT })
   deleteRecipeById(@Param() { id }: FindByIdDto, @Req() req: IRequest) {
     return this.recipeService.deleteById(id, req.user.userId);
+  }
+
+  @Post('generate/instagram')
+  @HttpCode(HttpStatus.ACCEPTED)
+  @ApiResponse({ type: NewRecipeDto, status: HttpStatus.ACCEPTED })
+  async generateRecipeFromInstagram(
+    @Body() { postUrl }: GenerateRecipeRequestDto,
+    @Req() req: IRequest,
+  ): Promise<void> {
+    this.recipeService.generateFromInstagram(postUrl, req.user.userId);
   }
 }

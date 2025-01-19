@@ -6,6 +6,10 @@ import { NewRecipeDto } from '../dtos/new-recipe.dto';
 import { DataSource, EntityManager } from 'typeorm';
 import { RecipeIngredient } from '../entities/recipe-ingredient.entity';
 import { AppLogger } from '../../providers/logger/logger.service';
+import { RecipeGeneratorService } from './recipe-generator.service';
+import { plainToInstance } from 'class-transformer';
+import { SocketService } from '../../providers/socket/socket.service';
+import { eSocketEvent } from '../../providers/socket/enums/socket-event.enum';
 
 @Injectable()
 export class RecipeService {
@@ -13,6 +17,8 @@ export class RecipeService {
     private recipeRepository: RecipeRepository,
     private dataSource: DataSource,
     private logger: AppLogger,
+    private recipeGeneratorService: RecipeGeneratorService,
+    private socketService: SocketService,
   ) {
     this.logger.setContext(RecipeService.name);
   }
@@ -28,6 +34,29 @@ export class RecipeService {
 
       this.logger.log(`Recipe with ${createdIngredients.length} has been created.`);
     });
+  }
+
+  async generateFromInstagram(postUrl: string, userId: string): Promise<void> {
+    try {
+      const generatedRecipe = await this.recipeGeneratorService.generateFromInstagram(postUrl);
+
+      this.logger.log(`Recipe has been generated`);
+      const concatIngredients = generatedRecipe.ingredients.map((i) => ({
+        ...i,
+        amount: `${i.amount} ${i.measurementUnit}`,
+      }));
+
+      const recipe = plainToInstance(NewRecipeDto, {
+        ...generatedRecipe,
+        ingredients: concatIngredients,
+      });
+
+      this.socketService.sendToUser(userId, eSocketEvent.RecipeGenerated, recipe);
+    } catch (e) {
+      this.logger.error(`Couldn't generate the recipe from instagram url: ${postUrl}`, e.message);
+
+      this.socketService.sendToUser(userId, eSocketEvent.RecipeGenerated);
+    }
   }
 
   async getUserRecipes(userId: string): Promise<UserRecipeDto[]> {
