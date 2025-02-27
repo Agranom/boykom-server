@@ -10,10 +10,11 @@ import { RecipeController } from './controllers/recipe.controller';
 import { RecipeGeneratorService } from './services/recipe-generator.service';
 import { GcpModule } from '../providers/gcp/gcp.module';
 import { SocketModule } from '../providers/socket/socket.module';
+import { RecipeInstruction } from './entities/recipe-instruction.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Recipe, RecipeIngredient]),
+    TypeOrmModule.forFeature([Recipe, RecipeIngredient, RecipeInstruction]),
     LoggerModule,
     AuthModule,
     GcpModule,

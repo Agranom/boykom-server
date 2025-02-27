@@ -5,9 +5,10 @@ const keys = [
   'title',
   'description',
   'portionsCount',
-  'cookingMethod',
+  'instructions',
   'ingredients',
   'imageUrl',
+  'videoUrl',
 ] as const;
 
 export class NewRecipeDto extends PickType(Recipe, keys) {}

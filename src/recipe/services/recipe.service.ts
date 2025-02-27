@@ -10,6 +10,9 @@ import { RecipeGeneratorService } from './recipe-generator.service';
 import { plainToInstance } from 'class-transformer';
 import { SocketService } from '../../providers/socket/socket.service';
 import { eSocketEvent } from '../../providers/socket/enums/socket-event.enum';
+import { RecipeInstruction } from '../entities/recipe-instruction.entity';
+import { RecipeMetadataDto } from '../dtos/recipe-metadata.dto';
+import { AbortRecipeDto } from '../dtos/abort-recipe.dto';
 
 @Injectable()
 export class RecipeService {
@@ -25,25 +28,54 @@ export class RecipeService {
 
   async createRecipe(newRecipe: NewRecipeDto, userId: string): Promise<void> {
     await this.dataSource.transaction(async (entityManager: EntityManager) => {
-      const { ingredients, ...recipe } = newRecipe;
+      const { ingredients, instructions, ...recipe } = newRecipe;
 
       const createdRecipe = await entityManager.save(Recipe, { ...recipe, authorId: userId });
 
       const ingredientsWithRecipe = ingredients.map((i) => ({ ...i, recipeId: createdRecipe.id }));
-      const createdIngredients = await entityManager.save(RecipeIngredient, ingredientsWithRecipe);
+      await entityManager.save(RecipeIngredient, ingredientsWithRecipe);
 
-      this.logger.log(`Recipe with ${createdIngredients.length} has been created.`);
+      const instructionsWithRecipe = instructions.map((i) => ({
+        ...i,
+        recipeId: createdRecipe.id,
+      }));
+      await entityManager.save(RecipeInstruction, instructionsWithRecipe);
+
+      this.logger.log(`Recipe has been created.`);
     });
   }
 
-  async generateFromInstagram(postUrl: string, userId: string): Promise<void> {
+  // async generateFromInstagram(postUrl: string, userId: string): Promise<void> {
+  //   try {
+  //     const generatedRecipe = await this.recipeGeneratorService.generateFromInstagram(postUrl);
+  //
+  //     this.logger.log(`Recipe has been generated`);
+  //     const concatIngredients = generatedRecipe.ingredients.map((i) => ({
+  //       ...i,
+  //       amount: `${i.amount} ${i.measurementUnit}`,
+  //     }));
+  //
+  //     const recipe = plainToInstance(NewRecipeDto, {
+  //       ...generatedRecipe,
+  //       ingredients: concatIngredients,
+  //     });
+  //
+  //     this.socketService.sendToUser(userId, eSocketEvent.RecipeGenerated, recipe);
+  //   } catch (e) {
+  //     this.logger.error(`Couldn't generate the recipe from instagram url: ${postUrl}`, e.message);
+  //
+  //     this.socketService.sendToUser(userId, eSocketEvent.RecipeGenerated);
+  //   }
+  // }
+
+  async createFromInstagram(dto: RecipeMetadataDto, userId: string): Promise<void> {
     try {
-      const generatedRecipe = await this.recipeGeneratorService.generateFromInstagram(postUrl);
+      const generatedRecipe = await this.recipeGeneratorService.generateFromInstagram(dto);
 
       this.logger.log(`Recipe has been generated`);
       const concatIngredients = generatedRecipe.ingredients.map((i) => ({
         ...i,
-        amount: `${i.amount} ${i.measurementUnit}`,
+        amount: i.measurementUnit ? `${i.amount} ${i.measurementUnit}` : i.amount,
       }));
 
       const recipe = plainToInstance(NewRecipeDto, {
@@ -51,12 +83,33 @@ export class RecipeService {
         ingredients: concatIngredients,
       });
 
-      this.socketService.sendToUser(userId, eSocketEvent.RecipeGenerated, recipe);
-    } catch (e) {
-      this.logger.error(`Couldn't generate the recipe from instagram url: ${postUrl}`, e.message);
+      await this.createRecipe(recipe, userId);
 
-      this.socketService.sendToUser(userId, eSocketEvent.RecipeGenerated);
+      this.socketService.sendToUser(userId, eSocketEvent.RecipeGenerated, { success: true });
+    } catch (e) {
+      this.logger.error(`Couldn't generate the recipe from instagram: `, e.message);
+
+      this.socketService.sendToUser(userId, eSocketEvent.RecipeGenerated, { success: false });
     }
+  }
+
+  async previewRecipeFromSocial(postUrl: string, userId: string) {
+    try {
+      const result = await this.recipeGeneratorService.getInstagramPostMetadata(postUrl);
+
+      this.socketService.sendToUser(userId, eSocketEvent.RecipePreviewed, {
+        success: true,
+        data: plainToInstance(RecipeMetadataDto, result),
+      });
+    } catch (e) {
+      this.logger.error(`Preview recipe failed: ${e.message}`);
+
+      this.socketService.sendToUser(userId, eSocketEvent.RecipePreviewed, { success: false });
+    }
+  }
+
+  async abortRecipeFromSocial(dto: AbortRecipeDto) {
+    return this.recipeGeneratorService.deleteRecipeVideo(dto);
   }
 
   async getUserRecipes(userId: string): Promise<UserRecipeDto[]> {
@@ -100,8 +153,4 @@ export class RecipeService {
   async deleteById(id: string, userId: string): Promise<void> {
     await this.recipeRepository.delete({ id, authorId: userId });
   }
-
-  // private async upsertRecipe(id?: string, newRecipe: CreateRecipeDto): Promise {
-  //
-  // }
 }

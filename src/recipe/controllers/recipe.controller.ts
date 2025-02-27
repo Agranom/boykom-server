@@ -21,6 +21,8 @@ import { UserRecipeDto } from '../dtos/user-recipe.dto';
 import { Recipe } from '../entities/recipe.entity';
 import { FindByIdDto } from '../../common/dtos/find-by-id.dto';
 import { GenerateRecipeRequestDto } from '../dtos/generated-recipe.dto';
+import { RecipeMetadataDto } from '../dtos/recipe-metadata.dto';
+import { AbortRecipeDto } from '../dtos/abort-recipe.dto';
 
 @Controller('recipes')
 @ApiTags('recipes')
@@ -67,13 +69,30 @@ export class RecipeController {
     return this.recipeService.deleteById(id, req.user.userId);
   }
 
-  @Post('generate/instagram')
+  @Post('from-social')
   @HttpCode(HttpStatus.ACCEPTED)
   @ApiResponse({ type: NewRecipeDto, status: HttpStatus.ACCEPTED })
   async generateRecipeFromInstagram(
+    @Body() body: RecipeMetadataDto,
+    @Req() req: IRequest,
+  ): Promise<void> {
+    this.recipeService.createFromInstagram(body, req.user.userId);
+  }
+
+  @Post('/from-social/preview')
+  @HttpCode(HttpStatus.ACCEPTED)
+  @ApiResponse({ status: HttpStatus.ACCEPTED })
+  async previewRecipeFromSocials(
     @Body() { postUrl }: GenerateRecipeRequestDto,
     @Req() req: IRequest,
   ): Promise<void> {
-    this.recipeService.generateFromInstagram(postUrl, req.user.userId);
+    this.recipeService.previewRecipeFromSocial(postUrl, req.user.userId);
+  }
+
+  @Post('/from-social/abort')
+  @HttpCode(HttpStatus.ACCEPTED)
+  @ApiResponse({ status: HttpStatus.ACCEPTED })
+  abortRecipeFromSocials(@Body() body: AbortRecipeDto) {
+    this.recipeService.abortRecipeFromSocial(body);
   }
 }
