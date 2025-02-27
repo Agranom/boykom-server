@@ -11,6 +11,6 @@ export class RecipeRepository extends EntityRepository<Recipe> {
   }
 
   async getFullRecipeById(recipeId: string): Promise<Recipe | null> {
-    return this.findOne({ where: { id: recipeId }, relations: ['ingredients'] });
+    return this.findOne({ where: { id: recipeId }, relations: ['ingredients', 'instructions'] });
   }
 }

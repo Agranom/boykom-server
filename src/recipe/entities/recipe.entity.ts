@@ -7,11 +7,13 @@ import {
   IsInt,
   IsOptional,
   IsString,
+  IsUrl,
   MaxLength,
   ValidateNested,
 } from 'class-validator';
 import { RecipeIngredient } from './recipe-ingredient.entity';
 import { Type } from 'class-transformer';
+import { RecipeInstruction } from './recipe-instruction.entity';
 
 @Entity('recipes')
 export class Recipe extends BaseEntity {
@@ -36,16 +38,16 @@ export class Recipe extends BaseEntity {
   description: string;
 
   @ApiProperty()
-  @IsString()
-  @MaxLength(2000)
-  @Column({ type: 'varchar', length: 2000 })
-  cookingMethod: string;
+  @IsOptional()
+  @IsUrl({ require_protocol: true })
+  @Column({ type: 'varchar', length: 2000, nullable: true })
+  imageUrl?: string;
 
   @ApiProperty()
-  @IsString()
   @IsOptional()
-  @Column({ type: 'varchar', length: 500, nullable: true })
-  imageUrl?: string;
+  @IsUrl({ require_protocol: true })
+  @Column({ type: 'varchar', length: 2000, nullable: true })
+  videoUrl?: string;
 
   @ApiProperty()
   @IsInt()
@@ -59,4 +61,11 @@ export class Recipe extends BaseEntity {
   @ValidateNested({ each: true })
   @OneToMany(() => RecipeIngredient, (ing) => ing.recipe)
   ingredients: RecipeIngredient[];
+
+  @ApiProperty({ isArray: true, type: RecipeInstruction })
+  @ArrayNotEmpty()
+  @Type(() => RecipeInstruction)
+  @ValidateNested({ each: true })
+  @OneToMany(() => RecipeInstruction, (ing) => ing.recipe)
+  instructions: RecipeInstruction[];
 }
