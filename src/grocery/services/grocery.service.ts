@@ -15,6 +15,7 @@ import { eGroceryItemStatus } from '../enums/grocery-item-status.enum';
 import { GroceryCategoriesService } from './grocery-categories.service';
 import { GroceryRepository } from './grocery.repository';
 import { CreateGroceryDto } from '../dto/create-grocery.dto';
+import { GroceryFilterDto } from '../dto/grocery-filter.dto';
 
 @Injectable()
 export class GroceryService {
@@ -38,9 +39,9 @@ export class GroceryService {
     return newItem;
   }
 
-  async findAll(userId: string): Promise<Grocery[]> {
+  async findAll(userId: string, { inFridge }: GroceryFilterDto): Promise<Grocery[]> {
     const userFamilyGroup = await this.familyGroupService.getWithMembersByUserId(userId);
-    let dbQuery: FindOptionsWhere<Grocery>[] | FindOptionsWhere<Grocery> = { userId };
+    const dbQuery: FindOptionsWhere<Grocery>[] | FindOptionsWhere<Grocery> = { userId };
 
     if (userFamilyGroup) {
       const activeMemberIds = FamilyGroupService.getActiveGroupMembers(userFamilyGroup).map(
@@ -49,8 +50,11 @@ export class GroceryService {
       const isMemberActive = activeMemberIds.includes(userId);
 
       if (isMemberActive) {
-        dbQuery = { userId: In(activeMemberIds) };
+        dbQuery.userId = In(activeMemberIds);
       }
+    }
+    if (inFridge != null) {
+      dbQuery.inFridge = inFridge;
     }
 
     return this.repository.find({ where: dbQuery, order: { createdAt: 1 } });
