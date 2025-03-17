@@ -34,7 +34,12 @@ export class Grocery extends BaseEntity {
   @ApiProperty()
   @IsEnum(eGroceryItemPriority)
   @IsOptional()
-  @Column({ enum: eGroceryItemPriority, type: 'enum', default: eGroceryItemPriority.Major })
+  @Column({
+    enum: eGroceryItemPriority,
+    type: 'enum',
+    default: eGroceryItemPriority.Major,
+    select: false,
+  })
   priority: eGroceryItemPriority;
 
   @Exclude()
@@ -50,6 +55,6 @@ export class Grocery extends BaseEntity {
   @ApiProperty()
   @IsBoolean()
   @IsOptional()
-  @Column({ default: false, select: false })
+  @Column({ default: false })
   inFridge: boolean;
 }
