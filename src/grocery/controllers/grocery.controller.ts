@@ -8,15 +8,17 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   Req,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { FindByIdDto } from '../../common/dtos/find-by-id.dto';
 import { IRequest } from '../../common/models/request.interface';
 import { PatchGroceryDto } from '../dto/patch-grocery.dto';
 import { Grocery } from '../entities/grocery.entity';
 import { GroceryService } from '../services/grocery.service';
 import { CreateGroceryDto } from '../dto/create-grocery.dto';
+import { GroceryFilterDto } from '../dto/grocery-filter.dto';
 
 @Controller('groceries')
 @ApiBearerAuth()
@@ -25,8 +27,9 @@ export class GroceryController {
   constructor(private groceryService: GroceryService) {}
 
   @Get()
-  async getAll(@Req() req: IRequest): Promise<Grocery[]> {
-    return this.groceryService.findAll(req.user.userId);
+  @ApiQuery({ name: 'inFridge', required: false })
+  async getAll(@Req() req: IRequest, @Query() query: GroceryFilterDto): Promise<Grocery[]> {
+    return this.groceryService.findAll(req.user.userId, query);
   }
 
   @Post()
