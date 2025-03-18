@@ -38,7 +38,8 @@ export class Grocery extends BaseEntity {
     enum: eGroceryItemPriority,
     type: 'enum',
     default: eGroceryItemPriority.Major,
-    select: false,
+    // TODO: change to `false` in the next release
+    // select: false,
   })
   priority: eGroceryItemPriority;
 
