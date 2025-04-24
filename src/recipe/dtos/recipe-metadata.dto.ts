@@ -14,6 +14,16 @@ export class RecipeVideoFile {
   @ApiProperty()
   @IsString()
   fileName: string;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsUrl()
+  url?: string;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsString()
+  publicFileId?: string;
 }
 
 export class RecipeMetadataDto {
