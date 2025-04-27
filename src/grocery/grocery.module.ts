@@ -12,6 +12,12 @@ import { GroceryCategoriesService } from './services/grocery-categories.service'
 import { GroceryRepository } from './services/grocery.repository';
 import { GroceryService } from './services/grocery.service';
 import { GcpModule } from '../providers/gcp/gcp.module';
+import { CqrsModule } from '@nestjs/cqrs';
+import { NotifyGroceryChangeHandler } from './commands/handlers/notify-grocery-change.handler';
+import { GrocerySagas } from './sagas/grocery.sagas';
+
+const CommandHandlers = [NotifyGroceryChangeHandler];
+const Sagas = [GrocerySagas];
 
 @Module({
   imports: [
@@ -22,8 +28,17 @@ import { GcpModule } from '../providers/gcp/gcp.module';
     SocketModule,
     LoggerModule,
     GcpModule,
+    CqrsModule,
   ],
-  providers: [GroceryService, GroceryRepository, GroceryCategoriesService, GroceryStorageService],
+  providers: [
+    ...CommandHandlers,
+    ...Sagas,
+    GroceryService,
+    GroceryRepository,
+    GroceryCategoriesService,
+    GroceryStorageService,
+  ],
   controllers: [GroceryController],
+  exports: [GroceryService],
 })
 export class GroceryModule {}
