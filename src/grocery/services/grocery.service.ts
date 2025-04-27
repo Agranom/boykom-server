@@ -16,6 +16,8 @@ import { GroceryCategoriesService } from './grocery-categories.service';
 import { GroceryRepository } from './grocery.repository';
 import { CreateGroceryDto } from '../dto/create-grocery.dto';
 import { GroceryFilterDto } from '../dto/grocery-filter.dto';
+import { EventBus } from '@nestjs/cqrs';
+import { GroceryChangedEvent } from '../events/grocery-changed.event';
 
 @Injectable()
 export class GroceryService {
@@ -26,6 +28,7 @@ export class GroceryService {
     private socketService: SocketService,
     private logger: AppLogger,
     private groceryCategoryService: GroceryCategoriesService,
+    private readonly eventBus: EventBus,
   ) {
     this.logger.setContext(GroceryService.name);
   }
@@ -78,7 +81,7 @@ export class GroceryService {
 
       const newGrocery = await this.repository.save({ ...grocery, ...dto });
 
-      this.onGroceryChange(userId);
+      this.eventBus.publish(new GroceryChangedEvent(userId));
 
       return newGrocery;
     } catch (e) {
@@ -96,7 +99,7 @@ export class GroceryService {
     const deleteResult = await this.repository.deleteById(id);
 
     if (deleteResult.affected) {
-      this.onGroceryChange(userId);
+      this.eventBus.publish(new GroceryChangedEvent(userId));
     }
   }
 
@@ -105,7 +108,7 @@ export class GroceryService {
     await this.repository.delete({ status: eGroceryItemStatus.Done });
   }
 
-  private async onGroceryChange(userId: string) {
+  async onGroceryChange(userId: string) {
     try {
       const result = await this.familyGroupService.getMemberWithSiblingsByUserId(userId);
 
