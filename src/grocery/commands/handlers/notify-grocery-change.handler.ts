@@ -3,6 +3,9 @@ import { NotifyGroceryChangeCommand } from '../notify-grocery-change.command';
 import { GroceryService } from '../../services/grocery.service';
 import { AppLogger } from '../../../providers/logger/logger.service';
 
+/**
+ * Handles the NotifyGroceryChangeCommand by executing the grocery change notification logic.
+ */
 @CommandHandler(NotifyGroceryChangeCommand)
 export class NotifyGroceryChangeHandler implements ICommandHandler<NotifyGroceryChangeCommand> {
   constructor(private readonly groceryService: GroceryService, private readonly logger: AppLogger) {
@@ -11,19 +14,14 @@ export class NotifyGroceryChangeHandler implements ICommandHandler<NotifyGrocery
 
   /**
    * Executes the notification logic by calling the existing method.
+   * Any unhandled exceptions will be caught by the CqrsExceptionFilter.
    */
   async execute(command: NotifyGroceryChangeCommand): Promise<{ userId: string }> {
-    try {
-      await this.groceryService.onGroceryChange(command.userId);
+    this.logger.log(`Executing NotifyGroceryChangeCommand for user: ${command.userId}`);
 
-      return { userId: command.userId };
-    } catch (error) {
-      this.logger.error(
-        `Failed to handle NotifyGroceryChangeCommand for user ${command.userId}`,
-        error,
-      );
-      // rethrow if necessary, or swallow to avoid crashing the bus
-      throw error;
-    }
+    await this.groceryService.onGroceryChange(command.userId);
+    this.logger.log(`Successfully executed NotifyGroceryChangeCommand for user: ${command.userId}`);
+
+    return { userId: command.userId };
   }
 }
