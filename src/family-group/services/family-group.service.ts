@@ -4,11 +4,12 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
-import { EventBus } from '@nestjs/cqrs';
 import { DataSource, Not } from 'typeorm';
 import { staticText } from '../../common/const/static-text';
+import { INotificationPayload } from '../../common/models/notification-payload.interface';
 import { IUserRequestPayload } from '../../common/models/request.interface';
 import { IStatusResponse } from '../../common/models/status-response.interface';
+import { eSocketEvent } from '../../providers/socket/enums/socket-event.enum';
 import { SubscriptionService } from '../../subsciption/services/subscription.service';
 import { User } from '../../user/entities/user.entity';
 import { UserService } from '../../user/services/user.service';
@@ -16,7 +17,6 @@ import { AddGroupMemberDto } from '../dto/add-group-member.dto';
 import { CreateGroupDto } from '../dto/create-group.dto';
 import { FamilyGroup } from '../entities/family-group.entity';
 import { GroupMember } from '../entities/group-member.entity';
-import { GroupMemberActionEvent } from '../events/group-member-action.event';
 import { FamilyGroupRepository } from './family-group.repository';
 import { GroupMemberRepository } from './group-member.repository';
 
@@ -28,7 +28,6 @@ export class FamilyGroupService {
     private subscriptionService: SubscriptionService,
     private userService: UserService,
     private dataSource: DataSource,
-    private eventBus: EventBus,
   ) {}
 
   static getActiveGroupMembers(familyGroup: FamilyGroup): GroupMember[] {
@@ -136,17 +135,10 @@ export class FamilyGroupService {
       throw new InternalServerErrorException(`Couldn't delete member`);
     }
 
-    this.eventBus.publish(
-      new GroupMemberActionEvent(
-        {
-          id: member.user.id,
-          firstName: member.user.firstName,
-          lastName: member.user.lastName,
-        },
-        groupId,
-        'removed',
-      ),
-    );
+    this.notifyGroupMembers(member.user, groupId, {
+      title: staticText.familyGroup.removeMember.title,
+      bodyFn: staticText.familyGroup.removeMember.body,
+    });
 
     return { memberId };
   }
@@ -179,17 +171,10 @@ export class FamilyGroupService {
 
     await this.memberRepository.createOne(currentMember);
 
-    this.eventBus.publish(
-      new GroupMemberActionEvent(
-        {
-          id: currentMember.user.id,
-          firstName: currentMember.user.firstName,
-          lastName: currentMember.user.lastName,
-        },
-        groupId,
-        'accepted',
-      ),
-    );
+    this.notifyGroupMembers(currentMember.user, groupId, {
+      title: staticText.familyGroup.acceptMembershipPayload.title,
+      bodyFn: staticText.familyGroup.acceptMembershipPayload.body,
+    });
   }
 
   async getGroupIdByUser(userId: string): Promise<string | undefined> {
@@ -227,10 +212,7 @@ export class FamilyGroupService {
     return null;
   }
 
-  /**
-   * Notifies all active members of a group except the user who performed the action
-   */
-  async notifyGroupMembers(
+  private async notifyGroupMembers(
     user: User,
     groupId: string,
     { title, bodyFn }: { title: string; bodyFn: (f: string, l: string) => string },
