@@ -4,13 +4,11 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
-import { CommandBus, EventBus } from '@nestjs/cqrs';
+import { EventBus } from '@nestjs/cqrs';
 import { DataSource, Not } from 'typeorm';
 import { staticText } from '../../common/const/static-text';
-import { INotificationPayload } from '../../common/models/notification-payload.interface';
 import { IUserRequestPayload } from '../../common/models/request.interface';
 import { IStatusResponse } from '../../common/models/status-response.interface';
-import { eSocketEvent } from '../../providers/socket/enums/socket-event.enum';
 import { SubscriptionService } from '../../subsciption/services/subscription.service';
 import { User } from '../../user/entities/user.entity';
 import { UserService } from '../../user/services/user.service';
@@ -19,7 +17,6 @@ import { CreateGroupDto } from '../dto/create-group.dto';
 import { FamilyGroup } from '../entities/family-group.entity';
 import { GroupMember } from '../entities/group-member.entity';
 import { GroupMemberActionEvent } from '../events/group-member-action.event';
-import { NotifyGroupMembersCommand } from '../commands/notify-group-members.command';
 import { FamilyGroupRepository } from './family-group.repository';
 import { GroupMemberRepository } from './group-member.repository';
 
@@ -32,7 +29,6 @@ export class FamilyGroupService {
     private userService: UserService,
     private dataSource: DataSource,
     private eventBus: EventBus,
-    private commandBus: CommandBus,
   ) {}
 
   static getActiveGroupMembers(familyGroup: FamilyGroup): GroupMember[] {
