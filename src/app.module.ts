@@ -7,7 +7,6 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { DataSourceOptions } from 'typeorm';
 import { AuthModule } from './auth/auth.module';
 import { AuthGuard } from './auth/guards/auth.guard';
-import { CommonCqrsModule } from './common/cqrs.module';
 import { appConfig } from './config/app.config';
 import { GroceryModule } from './grocery/grocery.module';
 import { LoggerModule } from './providers/logger/logger.module';
@@ -35,7 +34,6 @@ import { RecipeModule } from './recipe/recipe.module';
       inject: [ConfigService],
     }),
     ScheduleModule.forRoot(),
-    CommonCqrsModule,
     GroceryModule,
     AuthModule,
     UserModule,
