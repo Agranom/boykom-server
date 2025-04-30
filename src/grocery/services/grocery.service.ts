@@ -16,6 +16,9 @@ import { GroceryCategoriesService } from './grocery-categories.service';
 import { GroceryRepository } from './grocery.repository';
 import { CreateGroceryDto } from '../dto/create-grocery.dto';
 import { GroceryFilterDto } from '../dto/grocery-filter.dto';
+import { EventBus } from '@nestjs/cqrs';
+import { GroceryChangedEvent } from '../events/grocery-changed.event';
+import { GroceryCreatedEvent } from '../events/grocery-created.event';
 
 @Injectable()
 export class GroceryService {
@@ -26,6 +29,7 @@ export class GroceryService {
     private socketService: SocketService,
     private logger: AppLogger,
     private groceryCategoryService: GroceryCategoriesService,
+    private readonly eventBus: EventBus,
   ) {
     this.logger.setContext(GroceryService.name);
   }
@@ -34,7 +38,7 @@ export class GroceryService {
     const category = await this.groceryCategoryService.getCategory(groceryDto.name);
     const newItem = await this.repository.createOne({ ...groceryDto, userId, category });
 
-    this.notifyOnCreate(userId, newItem.name);
+    this.eventBus.publish(new GroceryCreatedEvent(userId, newItem.name));
 
     return newItem;
   }
@@ -78,7 +82,7 @@ export class GroceryService {
 
       const newGrocery = await this.repository.save({ ...grocery, ...dto });
 
-      this.onGroceryChange(userId);
+      this.eventBus.publish(new GroceryChangedEvent(userId));
 
       return newGrocery;
     } catch (e) {
@@ -96,7 +100,7 @@ export class GroceryService {
     const deleteResult = await this.repository.deleteById(id);
 
     if (deleteResult.affected) {
-      this.onGroceryChange(userId);
+      this.eventBus.publish(new GroceryChangedEvent(userId));
     }
   }
 
@@ -105,49 +109,40 @@ export class GroceryService {
     await this.repository.delete({ status: eGroceryItemStatus.Done });
   }
 
-  private async onGroceryChange(userId: string) {
-    try {
-      const result = await this.familyGroupService.getMemberWithSiblingsByUserId(userId);
+  async onGroceryChange(userId: string): Promise<void> {
+    const result = await this.familyGroupService.getMemberWithSiblingsByUserId(userId);
 
-      if (!result) {
-        return;
-      }
-
-      const { siblings } = result;
-      const siblingUserIds = siblings.map((s) => s.user.id);
-
-      this.notifyGroupMemberSiblings(siblingUserIds);
-    } catch (e) {
-      this.logger.error(`Couldn't notify siblings by socket.`, e);
+    if (!result) {
+      return;
     }
+
+    const { siblings } = result;
+    const siblingUserIds = siblings.map((s) => s.user.id);
+
+    this.notifyGroupMemberSiblings(siblingUserIds);
   }
 
-  // TODO: use RabbitMQ
-  private async notifyOnCreate(userId: string, groceryName: string): Promise<void> {
-    try {
-      const result = await this.familyGroupService.getMemberWithSiblingsByUserId(userId);
+  async notifyOnCreate(userId: string, groceryName: string): Promise<void> {
+    const result = await this.familyGroupService.getMemberWithSiblingsByUserId(userId);
 
-      if (!result) {
-        return;
-      }
-
-      const { primaryMember, siblings } = result;
-      const siblingUserIds = siblings.map((s) => s.user.id);
-
-      const payload: INotificationPayload = {
-        title: staticText.grocery.newProductNotificationTitle(
-          primaryMember.user.firstName,
-          primaryMember.user.lastName,
-        ),
-        body: groceryName,
-      };
-      // Should be run in background, so that don't need to add `await`
-      this.subscriptionService.notifySubscribers(siblingUserIds, payload);
-
-      this.notifyGroupMemberSiblings(siblingUserIds);
-    } catch (e) {
-      this.logger.error(`Couldn't notify siblings.`, e);
+    if (!result) {
+      return;
     }
+
+    const { primaryMember, siblings } = result;
+    const siblingUserIds = siblings.map((s) => s.user.id);
+
+    const payload: INotificationPayload = {
+      title: staticText.grocery.newProductNotificationTitle(
+        primaryMember.user.firstName,
+        primaryMember.user.lastName,
+      ),
+      body: groceryName,
+    };
+    // Should be run in background, so that don't need to add `await`
+    this.subscriptionService.notifySubscribers(siblingUserIds, payload);
+
+    this.notifyGroupMemberSiblings(siblingUserIds);
   }
 
   private notifyGroupMemberSiblings(userIds: string[]) {

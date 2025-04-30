@@ -64,7 +64,7 @@ You are an expert in TypeScript and  NestJS framework.
 - Follow SOLID principles.
 - Prefer composition over inheritance.
 - Declare interfaces to define contracts.
-- avoid adding `public` accessors on `public` class methods
+- avoid implicitly adding `public` accessors to `public` class methods, since they are `public` by default
 - Write small classes with a single purpose.
   - Less than 200 instructions.
   - Less than 10 public methods.
