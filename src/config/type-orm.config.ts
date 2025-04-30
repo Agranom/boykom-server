@@ -2,6 +2,7 @@ import { DataSource, DataSourceOptions } from 'typeorm';
 import { DatabaseNamingStrategy } from '../common/db/database-naming-strategy';
 import { ConfigHelper } from './config.helper';
 import * as dotenv from 'dotenv';
+import { join } from 'path';
 
 dotenv.config();
 
@@ -17,8 +18,8 @@ export const typeOrmConfig = (): DataSourceOptions => ({
   database: ConfigHelper.getOrThrow('POSTGRES_DATABASE'),
   namingStrategy: new DatabaseNamingStrategy(),
   synchronize: false,
-  entities: [`${entryDir}/**/*.entity{.ts,.js}`],
-  migrations: [`${entryDir}/migrations/*{.ts,.js}`],
+  entities: [join(__dirname, '..', '**', '*.entity.{ts,js}')],
+  migrations: [join(__dirname, '..', 'migrations', '*.{ts,js}')],
   // TODO: Change after releasing
   poolSize: 5,
 });
