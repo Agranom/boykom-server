@@ -13,6 +13,7 @@ import { eSocketEvent } from '../../providers/socket/enums/socket-event.enum';
 import { RecipeInstruction } from '../entities/recipe-instruction.entity';
 import { RecipeMetadataDto } from '../dtos/recipe-metadata.dto';
 import { AbortRecipeDto } from '../dtos/abort-recipe.dto';
+import { retry } from 'src/common/utils/retry.util';
 
 @Injectable()
 export class RecipeService {
@@ -151,6 +152,38 @@ export class RecipeService {
   }
 
   async deleteById(id: string, userId: string): Promise<void> {
+    const recipe = await this.recipeRepository.findOne({
+      where: { id, authorId: userId },
+      select: { videoUrl: true },
+    });
+
+    if (!recipe) {
+      throw new NotFoundException(`Recipe with ID - ${id} not found`);
+    }
+
     await this.recipeRepository.delete({ id, authorId: userId });
+
+    if (recipe.videoUrl) {
+      // Extract the publicFileId from the video URL
+      const fileName = recipe.videoUrl.split('/').pop();
+      if (fileName) {
+        const publicFileId = decodeURIComponent(fileName);
+        // wrap in retry
+        await retry(
+          () =>
+            this.recipeGeneratorService.deleteRecipeVideo({
+              publicFileId,
+            }),
+          {
+            useExponentialBackoff: true,
+            onRetry: (error) => {
+              this.logger.error(
+                `Failed to delete recipe video: ${error.message} (recipeId: ${id})`,
+              );
+            },
+          },
+        );
+      }
+    }
   }
 }

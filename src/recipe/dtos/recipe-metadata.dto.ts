@@ -8,8 +8,9 @@ export class RecipeVideoFile {
   uri: string;
 
   @ApiProperty()
+  @IsOptional()
   @IsString()
-  fileId: string;
+  fileId?: string;
 
   @ApiProperty()
   @IsString()
